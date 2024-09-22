@@ -49,3 +49,45 @@ catch_discover_tests(
   "unittests."
   OUTPUT_SUFFIX
   .xml)
+
+add_executable(test_sync_semaphore test_sync_semaphore.cpp)
+target_link_libraries(
+  test_sync_semaphore
+  PRIVATE walle::walle_warnings
+          walle::walle_options
+          walle::library
+          Catch2::Catch2WithMain)
+
+catch_discover_tests(
+  test_sync_semaphore
+  TEST_PREFIX
+  "unittests."
+  REPORTER
+  XML
+  OUTPUT_DIR
+  .
+  OUTPUT_PREFIX
+  "unittests."
+  OUTPUT_SUFFIX
+  .xml)
+
+add_executable(test_sync_tagged_semaphore test_sync_tagged_semaphore.cpp)
+target_link_libraries(
+  test_sync_tagged_semaphore
+  PRIVATE walle::walle_warnings
+          walle::walle_options
+          walle::library
+          Catch2::Catch2WithMain)
+
+catch_discover_tests(
+  test_sync_tagged_semaphore
+  TEST_PREFIX
+  "unittests."
+  REPORTER
+  XML
+  OUTPUT_DIR
+  .
+  OUTPUT_PREFIX
+  "unittests."
+  OUTPUT_SUFFIX
+  .xml)

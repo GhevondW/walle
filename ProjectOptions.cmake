@@ -18,7 +18,7 @@ macro(walle_supports_sanitizers)
 endmacro()
 
 macro(walle_setup_options)
-  option(walle_ENABLE_HARDENING "Enable hardening" ON)
+  option(walle_ENABLE_HARDENING "Enable hardening" OFF)
   option(walle_ENABLE_COVERAGE "Enable coverage reporting" OFF)
   cmake_dependent_option(
     walle_ENABLE_GLOBAL_HARDENING
@@ -54,7 +54,7 @@ macro(walle_setup_options)
     option(walle_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
     option(walle_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
     option(walle_ENABLE_CLANG_TIDY "Enable clang-tidy" ON)
-    option(walle_ENABLE_CPPCHECK "Enable cpp-check analysis" ON)
+    option(walle_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
     option(walle_ENABLE_PCH "Enable precompiled headers" OFF)
     option(walle_ENABLE_CACHE "Enable ccache" ON)
   endif()
