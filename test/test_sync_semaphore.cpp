@@ -11,21 +11,20 @@
 
 using namespace std::chrono_literals;
 
-
 TEST_CASE("walle::core::semaphore non blocking", "[walle::core::semaphore]") {
-    walle::sync::semaphore semaphore{2};
+    walle::sync::semaphore semaphore {2};
 
-    semaphore.acquire();  // -1
-    semaphore.release();  // +1
+    semaphore.acquire(); // -1
+    semaphore.release(); // +1
 
-    semaphore.acquire();  // -1
-    semaphore.acquire();  // -1
-    semaphore.release();  // +1
-    semaphore.release();  // +1
+    semaphore.acquire(); // -1
+    semaphore.acquire(); // -1
+    semaphore.release(); // +1
+    semaphore.release(); // +1
 }
 
 TEST_CASE("walle::core::semaphore blocking", "[walle::core::semaphore]") {
-    walle::sync::semaphore semaphore{0};
+    walle::sync::semaphore semaphore {0};
 
     bool touched = false;
 
@@ -45,8 +44,8 @@ TEST_CASE("walle::core::semaphore blocking", "[walle::core::semaphore]") {
 }
 
 TEST_CASE("walle::core::semaphore ping pong", "[walle::core::semaphore]") {
-    walle::sync::semaphore my{1};
-    walle::sync::semaphore that{0};
+    walle::sync::semaphore my {1};
+    walle::sync::semaphore that {0};
 
     int step = 0;
 

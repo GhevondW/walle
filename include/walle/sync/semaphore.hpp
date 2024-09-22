@@ -1,8 +1,8 @@
 #pragma once
 
+#include <condition_variable>
 #include <cstdlib>
 #include <mutex>
-#include <condition_variable>
 
 namespace walle::sync {
 
@@ -11,10 +11,9 @@ namespace walle::sync {
 class semaphore {
 public:
     explicit semaphore(std::size_t tokens)
-        :_tokens(tokens)
-        ,_mtx()
-        ,_cv()
-    {}
+        : _tokens(tokens)
+        , _mtx()
+        , _cv() {}
 
     void release();
     void acquire();
@@ -24,5 +23,5 @@ private:
     std::mutex _mtx;
     std::condition_variable _cv;
 };
-    
-}
+
+} // namespace walle::sync

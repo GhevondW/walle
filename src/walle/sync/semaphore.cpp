@@ -13,10 +13,10 @@ void semaphore::release() {
 
 void semaphore::acquire() {
     std::unique_lock lock(_mtx);
-    while(_tokens == 0) {
+    while (_tokens == 0) {
         _cv.wait(lock);
     }
     --_tokens;
 }
 
-}
+} // namespace walle::sync
