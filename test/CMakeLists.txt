@@ -91,3 +91,24 @@ catch_discover_tests(
   "unittests."
   OUTPUT_SUFFIX
   .xml)
+
+add_executable(test_sync_wait_group test_sync_wait_group.cpp)
+target_link_libraries(
+  test_sync_wait_group
+  PRIVATE walle::walle_warnings
+          walle::walle_options
+          walle::library
+          Catch2::Catch2WithMain)
+
+catch_discover_tests(
+  test_sync_wait_group
+  TEST_PREFIX
+  "unittests."
+  REPORTER
+  XML
+  OUTPUT_DIR
+  .
+  OUTPUT_PREFIX
+  "unittests."
+  OUTPUT_SUFFIX
+  .xml)

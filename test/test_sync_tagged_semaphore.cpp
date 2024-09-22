@@ -2,13 +2,6 @@
 
 #include <walle/sync/tagged_semaphore.hpp>
 
-#include <atomic>
-#include <chrono>
-#include <deque>
-#include <random>
-#include <string>
-#include <thread>
-
 using namespace std::chrono_literals;
 
 struct my_tag {};
