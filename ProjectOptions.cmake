@@ -1,5 +1,4 @@
 include(cmake/SystemLink.cmake)
-include(cmake/LibFuzzer.cmake)
 include(CMakeDependentOption)
 include(CheckCXXCompilerFlag)
 
@@ -45,7 +44,7 @@ macro(walle_setup_options)
     option(walle_ENABLE_PCH "Enable precompiled headers" OFF)
     option(walle_ENABLE_CACHE "Enable ccache" OFF)
   else()
-    option(walle_ENABLE_IPO "Enable IPO/LTO" ON)
+    option(walle_ENABLE_IPO "Enable IPO/LTO" OFF)
     option(walle_WARNINGS_AS_ERRORS "Treat Warnings As Errors" ON)
     option(walle_ENABLE_USER_LINKER "Enable user-selected linker" OFF)
     option(walle_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ${SUPPORTS_ASAN})
@@ -77,15 +76,6 @@ macro(walle_setup_options)
       walle_ENABLE_PCH
       walle_ENABLE_CACHE)
   endif()
-
-  walle_check_libfuzzer_support(LIBFUZZER_SUPPORTED)
-  if(LIBFUZZER_SUPPORTED AND (walle_ENABLE_SANITIZER_ADDRESS OR walle_ENABLE_SANITIZER_THREAD OR walle_ENABLE_SANITIZER_UNDEFINED))
-    set(DEFAULT_FUZZER ON)
-  else()
-    set(DEFAULT_FUZZER OFF)
-  endif()
-
-  option(walle_BUILD_FUZZ_TESTS "Enable fuzz testing executable" ${DEFAULT_FUZZER})
 
 endmacro()
 
