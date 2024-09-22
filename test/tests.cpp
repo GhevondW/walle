@@ -1,14 +1,16 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <walle/walle.hpp>
 
-#include <walle/sample_library.hpp>
+TEST_CASE("plus_10 are computed", "[walle::plus_10]") {
+    REQUIRE(walle::plus_10(0) == 10);
+    REQUIRE(walle::plus_10(1) == 11);
+    REQUIRE(walle::plus_10(2) == 12);
+    REQUIRE(walle::plus_10(3) == 13);
+    REQUIRE(walle::plus_10(10) == 20);
+}
 
-
-TEST_CASE("Factorials are computed", "[factorial]")
-{
-  REQUIRE(factorial(0) == 1);
-  REQUIRE(factorial(1) == 1);
-  REQUIRE(factorial(2) == 2);
-  REQUIRE(factorial(3) == 6);
-  REQUIRE(factorial(10) == 3628800);
+TEST_CASE("hi are computed", "[walle::hi]") {
+    REQUIRE(walle::hi("Ghevond") == "hi : Ghevond");
+    REQUIRE(walle::hi("Walle") == "hi : Walle");
 }
