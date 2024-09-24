@@ -15,9 +15,9 @@ class tagged_semaphore {
             assert(!is_valid());
         }
         token(const token& other) = delete;
-        token(token&& other) = default;
+        token(token&& other) noexcept = default;
         token& operator=(const token& other) = delete;
-        token& operator=(token&& other) = default;
+        token& operator=(token&& other) noexcept = default;
 
         [[nodiscard]] bool is_valid() const noexcept {
             return valid;
@@ -40,22 +40,22 @@ public:
         : _sema(tokens) {}
 
     [[nodiscard]] token acquire();
-    void release(toke_t&& token);
+    void release(toke_t&& in_token);
 
 private:
     semaphore _sema;
 };
 
 template <typename Tag>
-tagged_semaphore<Tag>::toke_t tagged_semaphore<Tag>::acquire() {
+typename tagged_semaphore<Tag>::toke_t tagged_semaphore<Tag>::acquire() {
     _sema.acquire();
     return toke_t {};
 }
 
 template <typename Tag>
-void tagged_semaphore<Tag>::release(toke_t&& token) {
+void tagged_semaphore<Tag>::release(toke_t&& in_token) {
     _sema.release();
-    token.invalidate();
+    in_token.invalidate();
 }
 
 } // namespace walle::sync

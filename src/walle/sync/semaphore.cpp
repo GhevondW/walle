@@ -5,7 +5,7 @@ namespace walle::sync {
 
 void semaphore::release() {
     {
-        std::lock_guard lock(_mtx);
+        const std::lock_guard lock(_mtx);
         ++_tokens;
     }
     _cv.notify_one();

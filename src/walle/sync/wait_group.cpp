@@ -6,12 +6,12 @@
 namespace walle::sync {
 
 void basic_wait_group::add(std::size_t count) {
-    std::lock_guard lock(_mtx);
+    const std::lock_guard lock(_mtx);
     _count += count;
 }
 
 void basic_wait_group::done(std::size_t count) {
-    std::lock_guard lock(_mtx);
+    const std::lock_guard lock(_mtx);
     _count -= count;
     if (_count == 0) {
         _idle.notify_all();
@@ -30,8 +30,7 @@ void wait_group::add(std::size_t count) {
 }
 
 void wait_group::done(std::size_t count) {
-    if (_count.fetch_sub(count, std::memory_order::acq_rel) == count) {
-        // std::lock_guard lg(_mtx);
+    if (_count.fetch_sub(count, std::memory_order_acq_rel) == count) {
         _idle.notify_all();
     }
 }

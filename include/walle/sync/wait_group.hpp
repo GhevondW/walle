@@ -33,10 +33,10 @@ public:
     wait_group() = default;
     ~wait_group() = default;
     wait_group(const wait_group& other) = delete;
-    wait_group(wait_group&& other) = delete;
+    wait_group(wait_group&& other) noexcept = delete;
 
     wait_group& operator=(const wait_group& other) = delete;
-    wait_group& operator=(wait_group&& other) = delete;
+    wait_group& operator=(wait_group&& other) noexcept = delete;
 
     void add(std::size_t count = 1);
     void done(std::size_t count = 1);
