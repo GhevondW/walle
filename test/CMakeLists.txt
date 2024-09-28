@@ -19,7 +19,29 @@ endif()
 
 include(${Catch2_SOURCE_DIR}/extras/Catch.cmake)
 
+add_executable(test_core_fast_pimpl test_core_fast_pimpl.cpp common/sample_pimpl.cpp)
+target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(
+  test_core_fast_pimpl
+  PRIVATE walle::walle_options
+          walle::library
+          Catch2::Catch2WithMain)
+
+catch_discover_tests(
+  test_core_fast_pimpl
+  TEST_PREFIX
+  "unittests."
+  REPORTER
+  XML
+  OUTPUT_DIR
+  .
+  OUTPUT_PREFIX
+  "unittests."
+  OUTPUT_SUFFIX
+  .xml)
+
 add_executable(test_sync_semaphore test_sync_semaphore.cpp)
+target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   test_sync_semaphore
   PRIVATE walle::walle_options
@@ -40,6 +62,7 @@ catch_discover_tests(
   .xml)
 
 add_executable(test_sync_tagged_semaphore test_sync_tagged_semaphore.cpp)
+target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   test_sync_tagged_semaphore
   PRIVATE walle::walle_options
@@ -60,6 +83,7 @@ catch_discover_tests(
   .xml)
 
 add_executable(test_sync_wait_group test_sync_wait_group.cpp)
+target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   test_sync_wait_group
   PRIVATE walle::walle_options

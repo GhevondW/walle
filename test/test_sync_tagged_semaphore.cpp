@@ -8,7 +8,7 @@ struct my_tag {};
 
 using tsem = walle::sync::tagged_semaphore<my_tag>;
 
-TEST_CASE("walle::core::tagged_semaphore non blocking", "[walle::core::tagged_semaphore]") {
+TEST_CASE("walle::sync::tagged_semaphore non blocking", "[walle::sync::tagged_semaphore]") {
     tsem semaphore {2};
 
     auto t1 = semaphore.acquire(); // -1
