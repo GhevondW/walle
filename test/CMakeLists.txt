@@ -22,8 +22,7 @@ include(${Catch2_SOURCE_DIR}/extras/Catch.cmake)
 add_executable(test_sync_semaphore test_sync_semaphore.cpp)
 target_link_libraries(
   test_sync_semaphore
-  PRIVATE walle::walle_warnings
-          walle::walle_options
+  PRIVATE walle::walle_options
           walle::library
           Catch2::Catch2WithMain)
 
@@ -43,8 +42,7 @@ catch_discover_tests(
 add_executable(test_sync_tagged_semaphore test_sync_tagged_semaphore.cpp)
 target_link_libraries(
   test_sync_tagged_semaphore
-  PRIVATE walle::walle_warnings
-          walle::walle_options
+  PRIVATE walle::walle_options
           walle::library
           Catch2::Catch2WithMain)
 
@@ -64,8 +62,7 @@ catch_discover_tests(
 add_executable(test_sync_wait_group test_sync_wait_group.cpp)
 target_link_libraries(
   test_sync_wait_group
-  PRIVATE walle::walle_warnings
-          walle::walle_options
+  PRIVATE walle::walle_options
           walle::library
           Catch2::Catch2WithMain)
 
