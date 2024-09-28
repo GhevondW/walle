@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace walle::core {
 
 class error : public std::exception {
