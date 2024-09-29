@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Check if the directory is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <directory>"
+    exit 1
+fi
+
+# Store the provided directory
+DIRECTORY="$1"
+
+# Run clang-format recursively on specified file types
+find "$DIRECTORY" -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.cc" -o -name "*.h" \) -exec clang-format -i {} \;
+
+echo "Formatting completed in directory: $DIRECTORY"

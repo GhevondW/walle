@@ -18,14 +18,7 @@ macro(walle_supports_sanitizers)
 endmacro()
 
 macro(walle_setup_options)
-  option(walle_ENABLE_HARDENING "Enable hardening" ON)
   option(walle_ENABLE_COVERAGE "Enable coverage reporting" OFF)
-  cmake_dependent_option(
-    walle_ENABLE_GLOBAL_HARDENING
-    "Attempt to push hardening options to built dependencies"
-    ON
-    walle_ENABLE_HARDENING
-    OFF)
 
   walle_supports_sanitizers()
 
@@ -54,7 +47,7 @@ macro(walle_setup_options)
     option(walle_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
     option(walle_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
     option(walle_ENABLE_CLANG_TIDY "Enable clang-tidy" ON)
-    option(walle_ENABLE_CPPCHECK "Enable cpp-check analysis" ON)
+    option(walle_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
     option(walle_ENABLE_PCH "Enable precompiled headers" OFF)
     option(walle_ENABLE_CACHE "Enable ccache" ON)
   endif()
@@ -83,23 +76,6 @@ macro(walle_global_options)
   if(walle_ENABLE_IPO)
     include(cmake/InterproceduralOptimization.cmake)
     walle_enable_ipo()
-  endif()
-
-  walle_supports_sanitizers()
-
-  if(walle_ENABLE_HARDENING AND walle_ENABLE_GLOBAL_HARDENING)
-    include(cmake/Hardening.cmake)
-    if(NOT SUPPORTS_UBSAN 
-       OR walle_ENABLE_SANITIZER_UNDEFINED
-       OR walle_ENABLE_SANITIZER_ADDRESS
-       OR walle_ENABLE_SANITIZER_THREAD
-       OR walle_ENABLE_SANITIZER_LEAK)
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
-    else()
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME TRUE)
-    endif()
-    message("${walle_ENABLE_HARDENING} ${ENABLE_UBSAN_MINIMAL_RUNTIME} ${walle_ENABLE_SANITIZER_UNDEFINED}")
-    walle_enable_hardening(walle_options ON ${ENABLE_UBSAN_MINIMAL_RUNTIME})
   endif()
 endmacro()
 
@@ -172,19 +148,4 @@ macro(walle_local_options)
       # target_link_options(walle_options INTERFACE -Wl,--fatal-warnings)
     endif()
   endif()
-
-  if(walle_ENABLE_HARDENING AND NOT walle_ENABLE_GLOBAL_HARDENING)
-    include(cmake/Hardening.cmake)
-    if(NOT SUPPORTS_UBSAN 
-       OR walle_ENABLE_SANITIZER_UNDEFINED
-       OR walle_ENABLE_SANITIZER_ADDRESS
-       OR walle_ENABLE_SANITIZER_THREAD
-       OR walle_ENABLE_SANITIZER_LEAK)
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME FALSE)
-    else()
-      set(ENABLE_UBSAN_MINIMAL_RUNTIME TRUE)
-    endif()
-    walle_enable_hardening(walle_options OFF ${ENABLE_UBSAN_MINIMAL_RUNTIME})
-  endif()
-
 endmacro()
