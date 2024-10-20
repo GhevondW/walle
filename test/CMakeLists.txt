@@ -102,3 +102,24 @@ catch_discover_tests(
   "unittests."
   OUTPUT_SUFFIX
   .xml)
+
+add_executable(test_coro_coroutine test_coro_coroutine.cpp)
+target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(
+  test_coro_coroutine
+  PRIVATE walle::walle_options
+          walle::library
+          Catch2::Catch2WithMain)
+
+catch_discover_tests(
+  test_coro_coroutine
+  TEST_PREFIX
+  "unittests."
+  REPORTER
+  XML
+  OUTPUT_DIR
+  .
+  OUTPUT_PREFIX
+  "unittests."
+  OUTPUT_SUFFIX
+  .xml)

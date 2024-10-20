@@ -23,4 +23,9 @@ public:
     using error::error;
 };
 
+class logic_error : public error {
+public:
+    using error::error;
+};
+
 } // namespace walle::core
