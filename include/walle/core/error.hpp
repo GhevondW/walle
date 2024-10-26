@@ -20,7 +20,8 @@ private:
 
 class not_implemeted_error : public error {
 public:
-    using error::error;
+    not_implemeted_error()
+        : error("Not implemented error") {}
 };
 
 } // namespace walle::core
