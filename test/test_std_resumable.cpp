@@ -20,7 +20,6 @@ walle::std::resumable hello_world() {
 
     EXPECT_EQ(Global, 7);
     ++Global;
-    co_await std::suspend_always {};
 }
 
 TEST(StdResumable, JustWorks) {
@@ -43,4 +42,8 @@ TEST(StdResumable, JustWorks) {
     ++Global;
     EXPECT_TRUE(coro.resume());
     EXPECT_EQ(Global, 8);
+
+    EXPECT_FALSE(coro.resume());
+    EXPECT_FALSE(coro.resume());
+    EXPECT_FALSE(coro.resume());
 }

@@ -37,8 +37,8 @@ public:
         return true;
     }
 
-    ~resumable() {
-        if (!_handle.done()) {
+    ~resumable() noexcept {
+        if (_handle) {
             _handle.destroy();
         }
     }
