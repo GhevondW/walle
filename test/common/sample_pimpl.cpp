@@ -1,7 +1,6 @@
 #include "sample_pimpl.hpp"
 
 #include <string>
-#include <utility>
 
 namespace test::common {
 

@@ -17,88 +17,21 @@ endif()
 
 # ---- Dependencies ----
 
-include(${Catch2_SOURCE_DIR}/extras/Catch.cmake)
+# Function to add a Google Test executable and register it
+function(walle_add_gtest test_name test_source)
+  add_executable(${test_name} ${test_source})
+  target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(
+    ${test_name}
+    PRIVATE walle::walle_options
+            walle::library
+            gtest
+            gtest_main)
+  add_test(NAME ${test_name} COMMAND ${test_name})
+endfunction()
 
-add_executable(test_core_fast_pimpl test_core_fast_pimpl.cpp common/sample_pimpl.cpp)
-target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(
-  test_core_fast_pimpl
-  PRIVATE walle::walle_options
-          walle::library
-          Catch2::Catch2WithMain)
+walle_add_gtest(test_core_fast_pimpl "test_core_fast_pimpl.cpp;common/sample_pimpl.cpp")
+walle_add_gtest(test_sync_semaphore test_sync_semaphore.cpp)
+walle_add_gtest(test_sync_tagged_semaphore test_sync_tagged_semaphore.cpp)
+walle_add_gtest(test_sync_wait_group test_sync_wait_group.cpp)
 
-catch_discover_tests(
-  test_core_fast_pimpl
-  TEST_PREFIX
-  "unittests."
-  REPORTER
-  XML
-  OUTPUT_DIR
-  .
-  OUTPUT_PREFIX
-  "unittests."
-  OUTPUT_SUFFIX
-  .xml)
-
-add_executable(test_sync_semaphore test_sync_semaphore.cpp)
-target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(
-  test_sync_semaphore
-  PRIVATE walle::walle_options
-          walle::library
-          Catch2::Catch2WithMain)
-
-catch_discover_tests(
-  test_sync_semaphore
-  TEST_PREFIX
-  "unittests."
-  REPORTER
-  XML
-  OUTPUT_DIR
-  .
-  OUTPUT_PREFIX
-  "unittests."
-  OUTPUT_SUFFIX
-  .xml)
-
-add_executable(test_sync_tagged_semaphore test_sync_tagged_semaphore.cpp)
-target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(
-  test_sync_tagged_semaphore
-  PRIVATE walle::walle_options
-          walle::library
-          Catch2::Catch2WithMain)
-
-catch_discover_tests(
-  test_sync_tagged_semaphore
-  TEST_PREFIX
-  "unittests."
-  REPORTER
-  XML
-  OUTPUT_DIR
-  .
-  OUTPUT_PREFIX
-  "unittests."
-  OUTPUT_SUFFIX
-  .xml)
-
-add_executable(test_sync_wait_group test_sync_wait_group.cpp)
-target_include_directories(test_core_fast_pimpl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(
-  test_sync_wait_group
-  PRIVATE walle::walle_options
-          walle::library
-          Catch2::Catch2WithMain)
-
-catch_discover_tests(
-  test_sync_wait_group
-  TEST_PREFIX
-  "unittests."
-  REPORTER
-  XML
-  OUTPUT_DIR
-  .
-  OUTPUT_PREFIX
-  "unittests."
-  OUTPUT_SUFFIX
-  .xml)

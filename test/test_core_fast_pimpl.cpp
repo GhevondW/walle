@@ -1,13 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
-
+#include <common/sample_pimpl.hpp>
+#include <gtest/gtest.h>
 #include <string>
 #include <walle/core/fast_pimpl.hpp>
 
-#include <common/sample_pimpl.hpp>
-
 using namespace std::chrono_literals;
 
-TEST_CASE("walle::core::fast_pimpl.just_works") {
+TEST(FastPimplTest, JustWorks) {
     int counter = 0;
     struct sample {
         sample(int* cnt)
@@ -49,69 +47,67 @@ TEST_CASE("walle::core::fast_pimpl.just_works") {
     };
 
     {
-        REQUIRE(counter == 0);
+        EXPECT_EQ(counter, 0);
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl(&counter);
-        REQUIRE(counter == 1);
+        EXPECT_EQ(counter, 1);
     }
-    REQUIRE(counter == 2);
+    EXPECT_EQ(counter, 2);
 
     {
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl1(&counter);
-        REQUIRE(counter == 3);
+        EXPECT_EQ(counter, 3);
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl2(&counter);
-        REQUIRE(counter == 4);
+        EXPECT_EQ(counter, 4);
 
         impl1 = impl2;
-        REQUIRE(counter == 5);
+        EXPECT_EQ(counter, 5);
     }
-    REQUIRE(counter == 7);
+    EXPECT_EQ(counter, 7);
 
     {
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl1(&counter);
-        REQUIRE(counter == 8);
+        EXPECT_EQ(counter, 8);
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl2(std::move(impl1));
-        REQUIRE(counter == 9);
+        EXPECT_EQ(counter, 9);
     }
-    REQUIRE(counter == 11);
+    EXPECT_EQ(counter, 11);
 
     {
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl1(&counter);
-        REQUIRE(counter == 12);
+        EXPECT_EQ(counter, 12);
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl2(
             static_cast<const walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)>&>(impl1));
 
-        REQUIRE(counter == 13);
+        EXPECT_EQ(counter, 13);
     }
-    REQUIRE(counter == 15);
+    EXPECT_EQ(counter, 15);
 
     {
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl1(&counter);
-        REQUIRE(counter == 16);
+        EXPECT_EQ(counter, 16);
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl2(impl1);
-        REQUIRE(counter == 17);
+        EXPECT_EQ(counter, 17);
     }
-    REQUIRE(counter == 19);
+    EXPECT_EQ(counter, 19);
 
     {
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl1(&counter);
-        REQUIRE(counter == 20);
+        EXPECT_EQ(counter, 20);
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl2 = impl1;
-        REQUIRE(counter == 21);
+        EXPECT_EQ(counter, 21);
     }
-    REQUIRE(counter == 23);
+    EXPECT_EQ(counter, 23);
 
     {
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl1(&counter);
-        REQUIRE(counter == 24);
+        EXPECT_EQ(counter, 24);
         walle::core::fast_pimpl<sample, sizeof(sample), alignof(sample)> impl2 = std::move(impl1);
-        REQUIRE(counter == 25);
+        EXPECT_EQ(counter, 25);
     }
-    REQUIRE(counter == 27);
+    EXPECT_EQ(counter, 27);
 }
 
-TEST_CASE("walle::core::fast_pimpl.sample") {
+TEST(FastPimplTest, Sample) {
     test::common::sample_pimpl pimpl("foo");
-    REQUIRE(std::string(pimpl.foo()) == "foo");
+    EXPECT_EQ(std::string(pimpl.foo()), "foo");
 }
-
-// TODO : add tests
