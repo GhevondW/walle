@@ -1,13 +1,13 @@
 #include <atomic>
-#include <catch2/catch_test_macros.hpp>
 #include <cstddef>
+#include <gtest/gtest.h>
 #include <thread>
 #include <vector>
 #include <walle/sync/wait_group.hpp>
 
 using wait_group = walle::sync::wait_group;
 
-TEST_CASE("WaitGroup.JustWorks") {
+TEST(WaitGroupTest, JustWorks) {
     wait_group wg;
 
     wg.add(1);
@@ -15,12 +15,12 @@ TEST_CASE("WaitGroup.JustWorks") {
     wg.wait();
 }
 
-TEST_CASE("WaitGroup.InitZero") {
+TEST(WaitGroupTest, InitZero) {
     wait_group wg;
     wg.wait();
 }
 
-TEST_CASE("WaitGroup.AddCount") {
+TEST(WaitGroupTest, AddCount) {
     wait_group wg;
 
     wg.add(7);
@@ -32,7 +32,7 @@ TEST_CASE("WaitGroup.AddCount") {
     wg.wait();
 }
 
-TEST_CASE("WaitGroup.Wait") {
+TEST(WaitGroupTest, Wait) {
     wait_group wg;
     bool ready = false;
 
@@ -45,12 +45,12 @@ TEST_CASE("WaitGroup.Wait") {
     });
 
     wg.wait();
-    REQUIRE(ready);
+    EXPECT_TRUE(ready);
 
     producer.join();
 }
 
-TEST_CASE("WaitGroup.MultiWait") {
+TEST(WaitGroupTest, MultiWait) {
     std::vector<std::thread> threads;
 
     wait_group wg;
@@ -64,7 +64,7 @@ TEST_CASE("WaitGroup.MultiWait") {
     for (size_t i = 0; i < kWaiters; ++i) {
         threads.emplace_back([&] {
             wg.wait();
-            REQUIRE(work.load() == kWorkers);
+            EXPECT_EQ(work.load(), kWorkers);
         });
     }
 
@@ -81,7 +81,7 @@ TEST_CASE("WaitGroup.MultiWait") {
     }
 }
 
-TEST_CASE("WaitGroup.BlockingWait") {
+TEST(WaitGroupTest, BlockingWait) {
     wait_group wg;
 
     static const size_t kWorkers = 3;
@@ -98,21 +98,20 @@ TEST_CASE("WaitGroup.BlockingWait") {
         });
     }
 
-    // You would replace this timer with a suitable mechanism to check elapsed time
     auto start = std::chrono::high_resolution_clock::now();
     wg.wait();
     auto end = std::chrono::high_resolution_clock::now();
     [[maybe_unused]] auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-    // TODO : optimize and make this better.
-    // REQUIRE(duration.count() < 100);
+    // TODO: Optimize timing check for improved accuracy
+    // EXPECT_LT(duration.count(), 100);
 
     for (auto& t : workers) {
         t.join();
     }
 }
 
-TEST_CASE("WaitGroup.Cyclic") {
+TEST(WaitGroupTest, Cyclic) {
     wait_group wg;
 
     for (size_t i = 0; i < 4; ++i) {
@@ -128,7 +127,7 @@ TEST_CASE("WaitGroup.Cyclic") {
 
         wg.wait();
 
-        REQUIRE(flag);
+        EXPECT_TRUE(flag);
 
         worker.join();
     }

@@ -1,12 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
-
-#include <walle/sync/semaphore.hpp>
-
+#include <chrono>
+#include <gtest/gtest.h>
 #include <thread>
+#include <walle/sync/semaphore.hpp>
 
 using namespace std::chrono_literals;
 
-TEST_CASE("walle::core::semaphore non blocking", "[walle::core::semaphore]") {
+TEST(SemaphoreTest, NonBlocking) {
     walle::sync::semaphore semaphore {2};
 
     semaphore.acquire(); // -1
@@ -18,7 +17,7 @@ TEST_CASE("walle::core::semaphore non blocking", "[walle::core::semaphore]") {
     semaphore.release(); // +1
 }
 
-TEST_CASE("walle::core::semaphore blocking", "[walle::core::semaphore]") {
+TEST(SemaphoreTest, Blocking) {
     walle::sync::semaphore semaphore {0};
 
     bool touched = false;
@@ -30,15 +29,15 @@ TEST_CASE("walle::core::semaphore blocking", "[walle::core::semaphore]") {
 
     std::this_thread::sleep_for(250ms);
 
-    REQUIRE_FALSE(touched);
+    EXPECT_FALSE(touched);
 
     semaphore.release();
     touch.join();
 
-    REQUIRE(touched);
+    EXPECT_TRUE(touched);
 }
 
-TEST_CASE("walle::core::semaphore ping pong", "[walle::core::semaphore]") {
+TEST(SemaphoreTest, PingPong) {
     walle::sync::semaphore my {1};
     walle::sync::semaphore that {0};
 
@@ -46,18 +45,18 @@ TEST_CASE("walle::core::semaphore ping pong", "[walle::core::semaphore]") {
 
     std::thread opponent([&] {
         that.acquire();
-        REQUIRE(step == 1);
+        EXPECT_EQ(step, 1);
         step = 0;
         my.release();
     });
 
     my.acquire();
-    REQUIRE(step == 0);
+    EXPECT_EQ(step, 0);
     step = 1;
     that.release();
 
     my.acquire();
-    REQUIRE(step == 0);
+    EXPECT_EQ(step, 0);
 
     opponent.join();
 }

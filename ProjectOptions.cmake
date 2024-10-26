@@ -18,65 +18,40 @@ macro(walle_supports_sanitizers)
 endmacro()
 
 macro(walle_setup_options)
-  option(walle_ENABLE_COVERAGE "Enable coverage reporting" OFF)
-
   walle_supports_sanitizers()
 
   if(NOT PROJECT_IS_TOP_LEVEL OR walle_PACKAGING_MAINTAINER_MODE)
-    option(walle_ENABLE_IPO "Enable IPO/LTO" OFF)
     option(walle_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
-    option(walle_ENABLE_USER_LINKER "Enable user-selected linker" OFF)
     option(walle_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" OFF)
     option(walle_ENABLE_SANITIZER_LEAK "Enable leak sanitizer" OFF)
     option(walle_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" OFF)
     option(walle_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" OFF)
     option(walle_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
-    option(walle_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
-    option(walle_ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
-    option(walle_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
     option(walle_ENABLE_PCH "Enable precompiled headers" OFF)
     option(walle_ENABLE_CACHE "Enable ccache" OFF)
   else()
-    option(walle_ENABLE_IPO "Enable IPO/LTO" OFF)
     option(walle_WARNINGS_AS_ERRORS "Treat Warnings As Errors" ON)
-    option(walle_ENABLE_USER_LINKER "Enable user-selected linker" OFF)
     option(walle_ENABLE_SANITIZER_ADDRESS "Enable address sanitizer" ${SUPPORTS_ASAN})
     option(walle_ENABLE_SANITIZER_LEAK "Enable leak sanitizer" OFF)
     option(walle_ENABLE_SANITIZER_UNDEFINED "Enable undefined sanitizer" ${SUPPORTS_UBSAN})
     option(walle_ENABLE_SANITIZER_THREAD "Enable thread sanitizer" OFF)
     option(walle_ENABLE_SANITIZER_MEMORY "Enable memory sanitizer" OFF)
-    option(walle_ENABLE_UNITY_BUILD "Enable unity builds" OFF)
-    option(walle_ENABLE_CLANG_TIDY "Enable clang-tidy" ON)
-    option(walle_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
     option(walle_ENABLE_PCH "Enable precompiled headers" OFF)
     option(walle_ENABLE_CACHE "Enable ccache" ON)
   endif()
 
   if(NOT PROJECT_IS_TOP_LEVEL)
     mark_as_advanced(
-      walle_ENABLE_IPO
       walle_WARNINGS_AS_ERRORS
-      walle_ENABLE_USER_LINKER
       walle_ENABLE_SANITIZER_ADDRESS
       walle_ENABLE_SANITIZER_LEAK
       walle_ENABLE_SANITIZER_UNDEFINED
       walle_ENABLE_SANITIZER_THREAD
       walle_ENABLE_SANITIZER_MEMORY
-      walle_ENABLE_UNITY_BUILD
-      walle_ENABLE_CLANG_TIDY
-      walle_ENABLE_CPPCHECK
-      walle_ENABLE_COVERAGE
       walle_ENABLE_PCH
       walle_ENABLE_CACHE)
   endif()
 
-endmacro()
-
-macro(walle_global_options)
-  if(walle_ENABLE_IPO)
-    include(cmake/InterproceduralOptimization.cmake)
-    walle_enable_ipo()
-  endif()
 endmacro()
 
 macro(walle_local_options)
@@ -96,11 +71,6 @@ macro(walle_local_options)
     ""
     "")
 
-  if(walle_ENABLE_USER_LINKER)
-    include(cmake/Linker.cmake)
-    walle_configure_linker(walle_options)
-  endif()
-
   include(cmake/Sanitizers.cmake)
   walle_enable_sanitizers(
     walle_options
@@ -109,8 +79,6 @@ macro(walle_local_options)
     ${walle_ENABLE_SANITIZER_UNDEFINED}
     ${walle_ENABLE_SANITIZER_THREAD}
     ${walle_ENABLE_SANITIZER_MEMORY})
-
-  set_target_properties(walle_options PROPERTIES UNITY_BUILD ${walle_ENABLE_UNITY_BUILD})
 
   if(walle_ENABLE_PCH)
     target_precompile_headers(
@@ -124,21 +92,6 @@ macro(walle_local_options)
   if(walle_ENABLE_CACHE)
     include(cmake/Cache.cmake)
     walle_enable_cache()
-  endif()
-
-  include(cmake/StaticAnalyzers.cmake)
-  if(walle_ENABLE_CLANG_TIDY)
-    walle_enable_clang_tidy(walle_options ${walle_WARNINGS_AS_ERRORS})
-  endif()
-
-  if(walle_ENABLE_CPPCHECK)
-    walle_enable_cppcheck(${walle_WARNINGS_AS_ERRORS} "" # override cppcheck options
-    )
-  endif()
-
-  if(walle_ENABLE_COVERAGE)
-    include(cmake/Tests.cmake)
-    walle_enable_coverage(walle_options)
   endif()
 
   if(walle_WARNINGS_AS_ERRORS)

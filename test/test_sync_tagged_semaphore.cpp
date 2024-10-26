@@ -1,5 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
-
+#include <chrono>
+#include <gtest/gtest.h>
 #include <walle/sync/tagged_semaphore.hpp>
 
 using namespace std::chrono_literals;
@@ -8,7 +8,7 @@ struct my_tag {};
 
 using tsem = walle::sync::tagged_semaphore<my_tag>;
 
-TEST_CASE("walle::sync::tagged_semaphore non blocking", "[walle::sync::tagged_semaphore]") {
+TEST(TaggedSemaphoreTest, NonBlocking) {
     tsem semaphore {2};
 
     auto t1 = semaphore.acquire(); // -1
@@ -20,4 +20,4 @@ TEST_CASE("walle::sync::tagged_semaphore non blocking", "[walle::sync::tagged_se
     semaphore.release(std::move(t2)); // +1
 }
 
-// TODO : add tests
+// TODO: add additional tests

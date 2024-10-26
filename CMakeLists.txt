@@ -28,7 +28,6 @@ include(ProjectOptions.cmake)
 
 walle_setup_options()
 
-walle_global_options()
 include(Dependencies.cmake)
 walle_setup_dependencies()
 
