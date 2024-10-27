@@ -3,6 +3,7 @@
 #include <function2/function2.hpp>
 #include <memory>
 
+#include <walle/core/coroutine/stack_allocator.hpp>
 #include <walle/core/error.hpp>
 
 namespace walle::core::coroutine {
@@ -21,7 +22,7 @@ public:
 
     using flow_t = fu2::unique_function<void()>;
 
-    static handle create(flow_t flow);
+    static handle create(flow_t flow, stack_allocator&& alloc);
 
     ~handle() noexcept;
     handle(const handle&) = delete;

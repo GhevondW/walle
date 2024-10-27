@@ -24,4 +24,10 @@ public:
         : error("Not implemented error") {}
 };
 
+// TODO : use std
+class logic_error : public error {
+public:
+    using error::error;
+};
+
 } // namespace walle::core

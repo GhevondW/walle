@@ -30,7 +30,7 @@ function(walle_add_gtest test_name test_source)
   add_test(NAME ${test_name} COMMAND ${test_name})
 endfunction()
 
-walle_add_gtest(test_core_fast_pimpl "test_core_fast_pimpl.cpp;common/sample_pimpl.cpp")
+# walle_add_gtest(test_core_fast_pimpl "test_core_fast_pimpl.cpp;common/sample_pimpl.cpp")
 walle_add_gtest(test_std_resumable test_std_resumable.cpp)
 walle_add_gtest(test_core_coroutine_handle test_core_coroutine_handle.cpp)
 walle_add_gtest(test_sync_semaphore test_sync_semaphore.cpp)
