@@ -1,15 +1,25 @@
-#include "walle/core/coroutine/stack_allocator.hpp"
+#include "walle/core/coroutine_stack_allocator.hpp"
+#include "walle/core/error.hpp"
+
 #include <cassert>
 
 namespace walle::core::coroutine {
 
-stack_allocator::stack_allocator(stack_allocator&& other) noexcept
+coroutine_stack_allocator::coroutine_stack_allocator(std::pmr::memory_resource* resource, std::size_t default_size)
+    : _memory_resource(resource)
+    , _default_size(default_size) {
+    if (_default_size == 0) {
+        throw logic_error {"the default size is zero"};
+    }
+}
+
+coroutine_stack_allocator::coroutine_stack_allocator(coroutine_stack_allocator&& other) noexcept
     : _memory_resource(other._memory_resource)
     , _default_size(other._default_size) {
     other._memory_resource = nullptr;
 }
 
-stack_allocator& stack_allocator::operator=(stack_allocator&& other) noexcept {
+coroutine_stack_allocator& coroutine_stack_allocator::operator=(coroutine_stack_allocator&& other) noexcept {
     if (this != &other) {
         _memory_resource = other._memory_resource;
         _default_size = other._default_size;
@@ -19,7 +29,7 @@ stack_allocator& stack_allocator::operator=(stack_allocator&& other) noexcept {
     return *this;
 }
 
-[[nodiscard]] stack_allocator::stack_t stack_allocator::allocate() {
+[[nodiscard]] coroutine_stack coroutine_stack_allocator::allocate() {
     assert(is_valid());
 
     void* data_ptr = _memory_resource->allocate(_default_size, alignof(std::max_align_t));
@@ -27,10 +37,10 @@ stack_allocator& stack_allocator::operator=(stack_allocator&& other) noexcept {
         throw std::bad_alloc();
     }
 
-    return stack_t {static_cast<std::byte*>(data_ptr) + _default_size, _default_size};
+    return coroutine_stack {static_cast<std::byte*>(data_ptr) + _default_size, _default_size};
 }
 
-void stack_allocator::deallocate(stack_t stack) const noexcept {
+void coroutine_stack_allocator::deallocate(coroutine_stack stack) const noexcept {
     assert(is_valid());
     assert(stack._ptr != nullptr);
     assert(stack._size = _default_size);
