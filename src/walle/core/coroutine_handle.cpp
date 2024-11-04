@@ -56,7 +56,7 @@ boost::context::detail::transfer_t frame_exit(boost::context::detail::transfer_t
 }
 
 template <typename Impl>
-void frame_entry([[maybe_unused]] boost::context::detail::transfer_t t) noexcept {
+void frame_entry(boost::context::detail::transfer_t t) noexcept {
     auto impl = static_cast<Impl*>(t.data);
     assert(nullptr != t.fctx);
     assert(nullptr != frame);
@@ -108,8 +108,7 @@ struct coroutine_handle::impl {
 coroutine_handle::coroutine_handle(std::unique_ptr<typename coroutine_handle::impl> impl) noexcept
     : _impl(std::move(impl)) {}
 
-coroutine_handle coroutine_handle::create([[maybe_unused]] flow_t flow,
-                                          [[maybe_unused]] coroutine_stack_allocator&& alloc) {
+coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator&& alloc) {
     if (!alloc.is_valid()) {
         throw logic_error {"the stack allocator is invalid"};
     }
@@ -136,7 +135,7 @@ coroutine_handle::~coroutine_handle() noexcept {
         return;
     }
 
-    boost::context::detail::ontop_fcontext(std::exchange(_impl->_machine_context, nullptr), _impl.get(), aux::unwind);
+    boost::context::detail::ontop_fcontext(_impl->_machine_context, _impl.get(), aux::unwind);
 }
 
 coroutine_handle::coroutine_handle(coroutine_handle&& other) noexcept

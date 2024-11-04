@@ -21,6 +21,9 @@ function(walle_setup_dependencies)
     OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt"
   )
 
+  # Define BOOST_USE_ASAN, 
+  # TODO : change it with my asan option
+  add_compile_definitions(BOOST_USE_ASAN)
   CPMAddPackage(
     NAME Boost
     VERSION 1.84.0
