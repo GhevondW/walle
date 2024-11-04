@@ -8,10 +8,31 @@
 #include <cstddef>
 #include <memory>
 
-namespace walle::core::coroutine {
+#define ASSERT_HANDLE_INVARIANT \
+    assert(_impl);              \
+    assert(_impl->_machine_context);
+
+namespace walle::core {
 
 namespace {
 namespace aux {
+
+template <typename Impl>
+struct suspend_fcontext : coroutine_handle::suspend_context_t {
+    explicit suspend_fcontext(boost::context::detail::fcontext_t& fctx, Impl* impl) noexcept
+        : _fctx(fctx)
+        , _impl(impl) {}
+
+    ~suspend_fcontext() noexcept override = default;
+
+    void suspend() override {
+        _fctx = boost::context::detail::jump_fcontext(_fctx, _impl).fctx;
+    }
+
+private:
+    boost::context::detail::fcontext_t& _fctx;
+    Impl* _impl;
+};
 
 struct forced_unwind {
     boost::context::detail::fcontext_t fctx {nullptr};
@@ -22,47 +43,37 @@ struct forced_unwind {
         : fctx(fctx_) {}
 };
 
-struct frame {
-    frame(coroutine_handle::flow_t flow, coroutine_stack_allocator&& alloc, coroutine_stack stack)
-        : _flow(std::move(flow))
-        , _alloc(std::move(alloc))
-        , _stack(stack) {}
+boost::context::detail::transfer_t unwind(boost::context::detail::transfer_t transfer) {
+    throw forced_unwind(transfer.fctx);
+}
 
-    void run([[maybe_unused]] boost::context::detail::fcontext_t ctx) {
-        _flow();
-    }
-
-    void deallocate() noexcept {}
-
-    coroutine_handle::flow_t _flow;
-    coroutine_stack_allocator _alloc;
-    coroutine_stack _stack;
-};
-
-template <typename Rec>
-boost::context::detail::transfer_t fiber_exit(boost::context::detail::transfer_t t) noexcept {
-    Rec* rec = static_cast<Rec*>(t.data);
-    rec->deallocate();
+template <typename Impl>
+boost::context::detail::transfer_t frame_exit(boost::context::detail::transfer_t t) noexcept {
+    auto impl = static_cast<Impl*>(t.data);
+    impl->deallocate_stack();
+    impl->_is_done = true;
     return {nullptr, nullptr};
 }
 
-template <typename Frame>
+template <typename Impl>
 void frame_entry([[maybe_unused]] boost::context::detail::transfer_t t) noexcept {
-    // transfer control structure to the context-stack
-    auto frame = static_cast<Frame*>(t.data);
+    auto impl = static_cast<Impl*>(t.data);
     assert(nullptr != t.fctx);
     assert(nullptr != frame);
+
+    suspend_fcontext suspender(t.fctx, impl);
+
     try {
-        // jump back to `create_context()`
         t = boost::context::detail::jump_fcontext(t.fctx, nullptr);
-        // start executing
-        // t.fctx = frame->run(t.fctx);
+        impl->run(suspender);
     } catch (forced_unwind const& ex) {
         t = {ex.fctx, nullptr};
+    } catch (const std::exception& e) {
+        impl->_exception = std::current_exception();
     }
+
     assert(nullptr != t.fctx);
-    // destroy context-stack of `this`context on next context
-    boost::context::detail::ontop_fcontext(t.fctx, frame, fiber_exit<Frame>);
+    boost::context::detail::ontop_fcontext(t.fctx, impl, frame_exit<Impl>);
     assert(false); // we must never get here.
 }
 
@@ -70,7 +81,28 @@ void frame_entry([[maybe_unused]] boost::context::detail::transfer_t t) noexcept
 } // namespace
 
 struct coroutine_handle::impl {
-    boost::context::detail::fcontext_t _machine_context;
+    impl(coroutine_handle::flow_t flow, coroutine_stack_allocator alloc, coroutine_stack stack)
+        : _is_done(false)
+        , _machine_context(nullptr)
+        , _flow(std::move(flow))
+        , _alloc(alloc)
+        , _stack(stack)
+        , _exception(nullptr) {}
+
+    void run(suspend_context_t& ctx) {
+        _flow(ctx);
+    }
+
+    void deallocate_stack() noexcept {
+        _alloc.deallocate(_stack);
+    }
+
+    bool _is_done {};
+    boost::context::detail::fcontext_t _machine_context {};
+    coroutine_handle::flow_t _flow {};
+    coroutine_stack_allocator _alloc {};
+    coroutine_stack _stack {};
+    std::exception_ptr _exception {};
 };
 
 coroutine_handle::coroutine_handle(std::unique_ptr<typename coroutine_handle::impl> impl) noexcept
@@ -83,36 +115,49 @@ coroutine_handle coroutine_handle::create([[maybe_unused]] flow_t flow,
     }
 
     auto stack = alloc.allocate();
+    std::unique_ptr<coroutine_handle::impl> impl;
+    try {
+        impl = std::make_unique<coroutine_handle::impl>(std::move(flow), alloc, stack);
+    } catch (const std::exception& e) {
+        alloc.deallocate(stack);
+        throw;
+    }
 
-    void* storage = reinterpret_cast<void*>(
-        (reinterpret_cast<std::size_t>(stack.top()) - static_cast<uintptr_t>(sizeof(aux::frame))) &
-        ~static_cast<std::size_t>(0xff));
-
-    auto* record = new (storage) aux::frame(std::move(flow), std::move(alloc), stack);
-
-    void* stack_top = reinterpret_cast<void*>(reinterpret_cast<std::size_t>(storage) - static_cast<std::size_t>(64));
-    void* stack_bottom =
-        reinterpret_cast<void*>(reinterpret_cast<std::size_t>(stack.top()) - static_cast<std::size_t>(stack.size()));
-    // create fast-context
-    const std::size_t size = reinterpret_cast<std::size_t>(stack_top) - reinterpret_cast<std::size_t>(stack_bottom);
-
-    const boost::context::detail::fcontext_t fctx = make_fcontext(stack_top, size, &aux::frame_entry<aux::frame>);
+    auto* fctx =
+        boost::context::detail::make_fcontext(stack.top(), stack.size(), &aux::frame_entry<coroutine_handle::impl>);
     assert(fctx != nullptr);
 
-    const auto result_fctx = boost::context::detail::jump_fcontext(fctx, record).fctx;
-    return coroutine_handle(std::unique_ptr<coroutine_handle::impl>(new coroutine_handle::impl(result_fctx)));
+    impl->_machine_context = boost::context::detail::jump_fcontext(fctx, impl.get()).fctx;
+    return coroutine_handle(std::move(impl));
 }
 
-coroutine_handle::~coroutine_handle() noexcept = default;
+coroutine_handle::~coroutine_handle() noexcept {
+    if (_impl == nullptr || is_done()) {
+        return;
+    }
+
+    boost::context::detail::ontop_fcontext(std::exchange(_impl->_machine_context, nullptr), _impl.get(), aux::unwind);
+}
 
 coroutine_handle::coroutine_handle(coroutine_handle&& other) noexcept
     : _impl(std::move(other._impl)) {}
 
-void coroutine_handle::resume() {}
+void coroutine_handle::resume() {
+    ASSERT_HANDLE_INVARIANT;
+    if (is_done()) {
+        throw resume_on_completed_coroutine_error_t {"resume on finished coroutine"};
+    }
 
-[[nodiscard]] bool coroutine_handle::is_done() const noexcept {
-    // impl
-    return false;
+    _impl->_machine_context = boost::context::detail::jump_fcontext(_impl->_machine_context, _impl.get()).fctx;
+
+    if (_impl->_exception) {
+        std::rethrow_exception(_impl->_exception);
+    }
 }
 
-} // namespace walle::core::coroutine
+[[nodiscard]] bool coroutine_handle::is_done() const noexcept {
+    ASSERT_HANDLE_INVARIANT;
+    return _impl->_is_done;
+}
+
+} // namespace walle::core

@@ -6,7 +6,7 @@
 #include <walle/core/coroutine_stack_allocator.hpp>
 #include <walle/core/error.hpp>
 
-namespace walle::core::coroutine {
+namespace walle::core {
 
 class coroutine_handle {
     struct impl;
@@ -18,11 +18,20 @@ public:
         using error::error;
     };
 
-    struct suspend_context_t {};
+    struct suspend_context_t {
+        suspend_context_t() noexcept = default;
+        virtual ~suspend_context_t() noexcept = default;
+        suspend_context_t(const suspend_context_t&) = delete;
+        suspend_context_t(suspend_context_t&&) noexcept = delete;
+        suspend_context_t& operator=(const suspend_context_t&) = delete;
+        suspend_context_t& operator=(suspend_context_t&&) noexcept = delete;
 
-    using flow_t = fu2::unique_function<void()>;
+        virtual void suspend() = 0; // maybe noexcept and const
+    };
 
-    static coroutine_handle create(flow_t flow, coroutine_stack_allocator&& alloc);
+    using flow_t = fu2::unique_function<void(suspend_context_t&)>;
+
+    static coroutine_handle create(flow_t flow, coroutine_stack_allocator&& alloc = coroutine_stack_allocator {});
 
     ~coroutine_handle() noexcept;
     coroutine_handle(const coroutine_handle&) = delete;
@@ -35,7 +44,8 @@ public:
     [[nodiscard]] bool is_done() const noexcept;
 
 private:
+    // TODO : maybe do not use unique_ptr?
     std::unique_ptr<impl> _impl;
 };
 
-} // namespace walle::core::coroutine
+} // namespace walle::core

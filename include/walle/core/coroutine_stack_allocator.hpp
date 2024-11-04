@@ -3,10 +3,12 @@
 #include <cstddef>
 #include <memory_resource>
 
-namespace walle::core::coroutine {
+namespace walle::core {
 
 struct coroutine_stack {
     friend struct coroutine_stack_allocator;
+
+    coroutine_stack() = default;
 
     [[nodiscard]] std::byte* top() const noexcept {
         return _ptr;
@@ -14,6 +16,10 @@ struct coroutine_stack {
 
     [[nodiscard]] std::size_t size() const noexcept {
         return _size;
+    }
+
+    [[nodiscard]] bool is_valid() const noexcept {
+        return _ptr != nullptr && _size != 0;
     }
 
 private:
@@ -27,7 +33,7 @@ private:
 
 struct coroutine_stack_allocator {
     explicit coroutine_stack_allocator(std::pmr::memory_resource* resource = std::pmr::get_default_resource(),
-                                       std::size_t default_size = 250000);
+                                       std::size_t default_size = 128000);
 
     coroutine_stack_allocator(const coroutine_stack_allocator& other) = default;
     coroutine_stack_allocator& operator=(const coroutine_stack_allocator& other) = delete;
@@ -38,10 +44,10 @@ struct coroutine_stack_allocator {
     ~coroutine_stack_allocator() noexcept = default;
 
     [[nodiscard]] coroutine_stack allocate();
-    void deallocate(coroutine_stack stack) const noexcept;
+    void deallocate(coroutine_stack stack) noexcept;
 
     [[nodiscard]] bool is_valid() const noexcept {
-        return _memory_resource != nullptr;
+        return _memory_resource != nullptr && _default_size != 0;
     }
 
 private:
@@ -49,4 +55,4 @@ private:
     std::size_t _default_size {};
 };
 
-} // namespace walle::core::coroutine
+} // namespace walle::core

@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-namespace walle::core::coroutine {
+namespace walle::core {
 
 coroutine_stack_allocator::coroutine_stack_allocator(std::pmr::memory_resource* resource, std::size_t default_size)
     : _memory_resource(resource)
@@ -40,7 +40,7 @@ coroutine_stack_allocator& coroutine_stack_allocator::operator=(coroutine_stack_
     return coroutine_stack {static_cast<std::byte*>(data_ptr) + _default_size, _default_size};
 }
 
-void coroutine_stack_allocator::deallocate(coroutine_stack stack) const noexcept {
+void coroutine_stack_allocator::deallocate(coroutine_stack stack) noexcept {
     assert(is_valid());
     assert(stack._ptr != nullptr);
     assert(stack._size = _default_size);
@@ -49,4 +49,4 @@ void coroutine_stack_allocator::deallocate(coroutine_stack stack) const noexcept
     _memory_resource->deallocate(static_cast<std::byte*>(ptr) - _default_size, stack._size);
 }
 
-} // namespace walle::core::coroutine
+} // namespace walle::core
