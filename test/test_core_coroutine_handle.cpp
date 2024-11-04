@@ -99,41 +99,40 @@ TEST(CoroutineHandle, DestroyUnfinishedCoroutine) {
 
 TEST(CortexNestedExecutionTest, Nested) {
     int counter = 0;
-    static constexpr std::size_t stack_size = 1000000;
 
     auto execution_one = walle::core::coroutine_handle::create([&counter](auto& suspender) {
-        EXPECT_EQ(++counter, 2);
-        std::cout << "Step 2" << '\n';
-        suspender.suspend();
+                                               EXPECT_EQ(++counter, 2);
+                                               std::cout << "Step 2" << '\n';
+                                               suspender.suspend();
 
-        EXPECT_EQ(++counter, 4);
-        std::cout << "Step 4" << '\n';
-    });
+                                               EXPECT_EQ(++counter, 4);
+                                               std::cout << "Step 4" << '\n';
+                                           });
 
     auto execution_two = walle::core::coroutine_handle::create([&execution_one, &counter](auto& suspender) {
-        EXPECT_EQ(++counter, 1);
-        std::cout << "Step 1" << '\n';
-        execution_one.resume();
+            EXPECT_EQ(++counter, 1);
+            std::cout << "Step 1" << '\n';
+            execution_one.resume();
 
-        EXPECT_EQ(++counter, 3);
-        std::cout << "Step 3" << '\n';
-        execution_one.resume();
+            EXPECT_EQ(++counter, 3);
+            std::cout << "Step 3" << '\n';
+            execution_one.resume();
 
-        auto nested = walle::core::coroutine_handle::create([&counter](auto& suspender) {
-            EXPECT_EQ(++counter, 5);
-            std::cout << "Step 5" << '\n';
-            suspender.suspend();
+            auto nested = walle::core::coroutine_handle::create([&counter](auto& suspender) {
+                                                EXPECT_EQ(++counter, 5);
+                                                std::cout << "Step 5" << '\n';
+                                                suspender.suspend();
 
-            EXPECT_EQ(++counter, 7);
-            std::cout << "Step 7" << '\n';
+                                                EXPECT_EQ(++counter, 7);
+                                                std::cout << "Step 7" << '\n';
+                                            });
+
+            nested.resume();
+
+            EXPECT_EQ(++counter, 6);
+            std::cout << "Step 6" << '\n';
+            nested.resume();
         });
-
-        nested.resume();
-
-        EXPECT_EQ(++counter, 6);
-        std::cout << "Step 6" << '\n';
-        nested.resume();
-    });
 
     execution_two.resume();
 
