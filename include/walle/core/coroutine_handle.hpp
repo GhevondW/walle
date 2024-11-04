@@ -8,6 +8,7 @@
 
 namespace walle::core {
 
+// TODO : construct the impl with inplace new on the same stack memory.
 class coroutine_handle {
     struct impl;
 
