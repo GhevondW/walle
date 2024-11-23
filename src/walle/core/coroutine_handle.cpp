@@ -5,7 +5,7 @@
 // TODO : do not include a header from detail
 #include <boost/context/detail/fcontext.hpp>
 #include <cassert>
-#include <cstddef>
+#include <exception>
 #include <memory>
 
 #define ASSERT_HANDLE_INVARIANT \
@@ -34,13 +34,15 @@ private:
     Impl* _impl;
 };
 
-struct forced_unwind {
+struct forced_unwind : std::exception {
     boost::context::detail::fcontext_t fctx {nullptr};
-
-    forced_unwind() = default;
 
     explicit forced_unwind(boost::context::detail::fcontext_t fctx_)
         : fctx(fctx_) {}
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return nullptr;
+    }
 };
 
 boost::context::detail::transfer_t unwind(boost::context::detail::transfer_t transfer) {
@@ -48,32 +50,32 @@ boost::context::detail::transfer_t unwind(boost::context::detail::transfer_t tra
 }
 
 template <typename Impl>
-boost::context::detail::transfer_t frame_exit(boost::context::detail::transfer_t t) noexcept {
-    auto impl = static_cast<Impl*>(t.data);
+boost::context::detail::transfer_t frame_exit(boost::context::detail::transfer_t transfer) noexcept {
+    auto impl = static_cast<Impl*>(transfer.data);
     impl->deallocate_stack();
     impl->_is_done = true;
     return {nullptr, nullptr};
 }
 
 template <typename Impl>
-void frame_entry(boost::context::detail::transfer_t t) noexcept {
-    auto impl = static_cast<Impl*>(t.data);
-    assert(nullptr != t.fctx);
-    assert(nullptr != frame);
+void frame_entry(boost::context::detail::transfer_t transfer) noexcept {
+    auto impl = static_cast<Impl*>(transfer.data);
+    assert(transfer.fctx != nullptr);
+    assert(frame != nullptr);
 
-    suspend_fcontext suspender(t.fctx, impl);
+    suspend_fcontext suspender(transfer.fctx, impl);
 
     try {
-        t = boost::context::detail::jump_fcontext(t.fctx, nullptr);
+        transfer = boost::context::detail::jump_fcontext(transfer.fctx, nullptr);
         impl->run(suspender);
-    } catch (forced_unwind const& ex) {
-        t = {ex.fctx, nullptr};
-    } catch (const std::exception& e) {
+    } catch (const forced_unwind& error) {
+        transfer = {error.fctx, nullptr};
+    } catch (const std::exception& error) {
         impl->_exception = std::current_exception();
     }
 
     assert(nullptr != t.fctx);
-    boost::context::detail::ontop_fcontext(t.fctx, impl, frame_exit<Impl>);
+    boost::context::detail::ontop_fcontext(transfer.fctx, impl, frame_exit<Impl>);
     assert(false); // we must never get here.
 }
 
@@ -109,8 +111,12 @@ coroutine_handle::coroutine_handle(std::unique_ptr<typename coroutine_handle::im
     : _impl(std::move(impl)) {}
 
 coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator&& alloc) {
+    if (flow.empty()) {
+        throw std::logic_error {"the flow is empty."};
+    }
+
     if (!alloc.is_valid()) {
-        throw logic_error {"the stack allocator is invalid"};
+        throw std::logic_error {"the stack allocator is invalid."};
     }
 
     auto stack = alloc.allocate();

@@ -1,7 +1,7 @@
 #include "walle/core/coroutine_stack_allocator.hpp"
-#include "walle/core/error.hpp"
 
 #include <cassert>
+#include <stdexcept>
 
 namespace walle::core {
 
@@ -9,7 +9,7 @@ coroutine_stack_allocator::coroutine_stack_allocator(std::pmr::memory_resource* 
     : _memory_resource(resource)
     , _default_size(default_size) {
     if (_default_size == 0) {
-        throw logic_error {"the default size is zero"};
+        throw std::logic_error {"the default size is zero"};
     }
 }
 

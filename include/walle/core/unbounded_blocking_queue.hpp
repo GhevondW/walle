@@ -5,6 +5,7 @@
 #include <optional>
 #include <queue>
 
+#include <stdexcept>
 #include <walle/core/error.hpp>
 
 namespace walle::core {
@@ -12,8 +13,8 @@ namespace walle::core {
 template <typename T>
 class unbounded_blocking_queue {
 public:
-    struct operation_on_closed_queue : error {
-        using error::error;
+    struct operation_on_closed_queue : std::runtime_error {
+        using runtime_error::runtime_error;
     };
 
     unbounded_blocking_queue() = default;

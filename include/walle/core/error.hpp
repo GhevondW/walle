@@ -1,33 +1,12 @@
 #pragma once
 
-#include <string>
+#include <stdexcept>
 
 namespace walle::core {
 
-class error : public std::exception {
+class not_implemeted_error : public std::logic_error {
 public:
-    template <typename StringLike>
-    explicit error(StringLike&& str)
-        : _what(std::forward<StringLike>(str)) {}
-
-    [[nodiscard]] const char* what() const noexcept override {
-        return _what.c_str();
-    }
-
-private:
-    std::string _what;
-};
-
-class not_implemeted_error : public error {
-public:
-    not_implemeted_error()
-        : error("Not implemented error") {}
-};
-
-// TODO : use std
-class logic_error : public error {
-public:
-    using error::error;
+    using logic_error::logic_error;
 };
 
 } // namespace walle::core

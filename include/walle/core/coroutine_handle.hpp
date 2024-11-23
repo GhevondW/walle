@@ -3,6 +3,7 @@
 #include <function2/function2.hpp>
 #include <memory>
 
+#include <stdexcept>
 #include <walle/core/coroutine_stack_allocator.hpp>
 #include <walle/core/error.hpp>
 
@@ -15,8 +16,8 @@ class coroutine_handle {
     explicit coroutine_handle(std::unique_ptr<impl> impl) noexcept;
 
 public:
-    struct resume_on_completed_coroutine_error_t : core::error {
-        using error::error;
+    struct resume_on_completed_coroutine_error_t : std::logic_error {
+        using logic_error::logic_error;
     };
 
     struct suspend_context_t {
@@ -27,6 +28,7 @@ public:
         suspend_context_t& operator=(const suspend_context_t&) = delete;
         suspend_context_t& operator=(suspend_context_t&&) noexcept = delete;
 
+        // can not be noexcept because of forced unwinding
         virtual void suspend() = 0; // maybe noexcept and const
     };
 
