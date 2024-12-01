@@ -17,7 +17,8 @@ event_loop::event_loop()
 }
 
 event_loop::~event_loop() {
-    // TODO think about this this is noexcept
+    // TODO think about this, the stop() might throw an exception
+    // but the destructor is noexcept
     stop();
 }
 

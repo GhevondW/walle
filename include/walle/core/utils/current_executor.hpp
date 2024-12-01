@@ -4,17 +4,11 @@
 
 #include <walle/core/executor.hpp>
 
-namespace walle::core {
-    class event_loop;
-}
-
 namespace walle::core::utils
 {
     
 struct current_executor
 {
-    friend class event_loop;
-
     struct no_execution_context_error : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
