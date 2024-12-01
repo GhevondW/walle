@@ -3,6 +3,8 @@
 #include <thread>
 #include <utility>
 
+#include "walle/core/utils/current_executor.hpp"
+
 namespace walle::core {
 
 event_loop::event_loop()
@@ -29,8 +31,6 @@ void event_loop::submit(task_t task) {
 }
 
 void event_loop::stop() {
-    // _done = true;
-    // _cv.notify_one();
     submit([this]() { _done = true; });
 
     if (_worker.joinable()) {
@@ -38,11 +38,9 @@ void event_loop::stop() {
     }
 }
 
-// void event_loop::wait_idle() {
-
-// }
-
 void event_loop::loop() {
+    const utils::current_executor::scope_guard scope_guard(this);
+
     std::list<task_t> current_tasks;
 
     for (;;) {

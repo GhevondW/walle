@@ -4,11 +4,12 @@
 #include <list>
 #include <mutex>
 #include <thread>
+
 #include <walle/core/executor.hpp>
 
 namespace walle::core {
 
-class event_loop : executor_i {
+class event_loop : public executor_i {
 public:
     event_loop();
 
@@ -20,7 +21,6 @@ public:
 
     void submit(task_t task) override;
     void stop();
-    // void wait_idle(); TODO implement later
 
 private:
     void loop();

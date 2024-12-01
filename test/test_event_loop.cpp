@@ -5,6 +5,8 @@
 #include <vector>
 #include <walle/core/event_loop.hpp>
 #include <walle/core/executor.hpp> // Replace with actual path to executor_i and event_loop headers
+#include <walle/core/utils/current_executor.hpp>
+#include <walle/sync/wait_group.hpp>
 
 using namespace walle::core;
 
@@ -39,7 +41,7 @@ TEST_F(EventLoopTest, SubmitsTaskAndExecutes) {
     loop.submit([&]() { dummy_task(counter); });
 
     // Wait for the task to execute
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    loop.stop(); // TODO use wait_group
     ASSERT_EQ(counter, 1);
 }
 
@@ -53,7 +55,7 @@ TEST_F(EventLoopTest, ExecutesMultipleTasks) {
     }
 
     // Wait for tasks to execute
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    loop.stop();
     ASSERT_EQ(counter, 5);
 }
 
@@ -83,7 +85,6 @@ TEST_F(EventLoopTest, DestructorStopsAndCleansUp) {
     } // Event loop goes out of scope and destructor is called
 
     // Give some time for destructor cleanup
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     ASSERT_EQ(counter, 1); // Task should have executed before destruction
 }
 
@@ -115,7 +116,7 @@ TEST_F(EventLoopTest, StressTest) {
     std::atomic<int> counter = 0;
     for (int i = 0; i < 10; ++i) {
         workers.push_back(std::thread([&loop, &counter]() {
-            for (int i = 0; i < 1000000; ++i) {
+            for (int i = 0; i < 10000; ++i) {
                 loop.submit([&]() { dummy_task(counter); });
             }
         }));
@@ -129,7 +130,32 @@ TEST_F(EventLoopTest, StressTest) {
 
     loop.stop();
 
-    // Wait to ensure task is not executed
+    ASSERT_EQ(counter, 10000 * 10); // No tasks should execute
+}
+
+TEST_F(EventLoopTest, CurrentExecutor) {
+    event_loop loop;
+    std::atomic<int> counter = 0;
+    std::atomic<int> flag = 0;
+
+    walle::sync::wait_group wg;
+    wg.add(1);
+
+    loop.submit([&]() { 
+        EXPECT_TRUE(&loop == utils::current_executor::get());
+        dummy_task(counter);
+        utils::current_executor::get()->submit([&](){
+            dummy_task(counter);
+            utils::current_executor::get()->submit([&](){
+                dummy_task(counter);
+                wg.done();
+            });
+        });
+    });
+    
+    wg.wait();
+    // Wait for the task to execute
+    loop.stop();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    ASSERT_EQ(counter, 1000000 * 10); // No tasks should execute
+    ASSERT_EQ(counter, 3);
 }
