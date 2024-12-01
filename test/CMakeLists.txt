@@ -37,4 +37,6 @@ walle_add_gtest(test_sync_semaphore test_sync_semaphore.cpp)
 walle_add_gtest(test_sync_tagged_semaphore test_sync_tagged_semaphore.cpp)
 walle_add_gtest(test_sync_wait_group test_sync_wait_group.cpp)
 walle_add_gtest(test_unbounded_blocking_queue test_unbounded_blocking_queue.cpp)
+walle_add_gtest(test_event_loop test_event_loop.cpp)
+walle_add_gtest(test_manual_executor test_manual_executor.cpp)
 

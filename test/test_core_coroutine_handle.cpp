@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <thread>
 #include <walle/core/coroutine_handle.hpp>
 
 #include <iostream>
