@@ -8,10 +8,6 @@
 #include <exception>
 #include <memory>
 
-#define ASSERT_HANDLE_INVARIANT \
-    assert(_impl);              \
-    assert(_impl->_machine_context);
-
 namespace walle::core {
 
 namespace {
@@ -22,6 +18,11 @@ struct suspend_fcontext : coroutine_handle::suspend_context_t {
     explicit suspend_fcontext(boost::context::detail::fcontext_t& fctx, Impl* impl) noexcept
         : _fctx(fctx)
         , _impl(impl) {}
+
+    suspend_fcontext(const suspend_fcontext&) = delete;
+    suspend_fcontext(suspend_fcontext&&) noexcept = delete;
+    suspend_fcontext& operator=(const suspend_fcontext&) = delete;
+    suspend_fcontext& operator=(suspend_fcontext&&) noexcept = delete;
 
     ~suspend_fcontext() noexcept override = default;
 
@@ -61,7 +62,7 @@ template <typename Impl>
 void frame_entry(boost::context::detail::transfer_t transfer) noexcept {
     auto impl = static_cast<Impl*>(transfer.data);
     assert(transfer.fctx != nullptr);
-    assert(frame != nullptr);
+    assert(impl != nullptr);
 
     suspend_fcontext suspender(transfer.fctx, impl);
 
@@ -70,11 +71,11 @@ void frame_entry(boost::context::detail::transfer_t transfer) noexcept {
         impl->run(suspender);
     } catch (const forced_unwind& error) {
         transfer = {error.fctx, nullptr};
-    } catch (const std::exception& error) {
+    } catch (const std::exception&) {
         impl->_exception = std::current_exception();
     }
 
-    assert(nullptr != t.fctx);
+    assert(nullptr != transfer.fctx);
     boost::context::detail::ontop_fcontext(transfer.fctx, impl, frame_exit<Impl>);
     assert(false); // we must never get here.
 }
@@ -123,7 +124,7 @@ coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator
     std::unique_ptr<coroutine_handle::impl> impl;
     try {
         impl = std::make_unique<coroutine_handle::impl>(std::move(flow), alloc, stack);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         alloc.deallocate(stack);
         throw;
     }
@@ -148,7 +149,7 @@ coroutine_handle::coroutine_handle(coroutine_handle&& other) noexcept
     : _impl(std::move(other._impl)) {}
 
 void coroutine_handle::resume() {
-    ASSERT_HANDLE_INVARIANT;
+    assert(_impl);
     if (is_done()) {
         throw resume_on_completed_coroutine_error_t {"resume on finished coroutine"};
     }
@@ -161,7 +162,7 @@ void coroutine_handle::resume() {
 }
 
 [[nodiscard]] bool coroutine_handle::is_done() const noexcept {
-    ASSERT_HANDLE_INVARIANT;
+    assert(_impl);
     return _impl->_is_done;
 }
 

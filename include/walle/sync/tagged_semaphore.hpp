@@ -11,9 +11,7 @@ template <typename Tag>
 class tagged_semaphore {
     struct token {
         token() = default;
-        ~token() {
-            assert(!is_valid());
-        }
+        ~token() = default;
         token(const token& other) = delete;
         token(token&& other) noexcept = default;
         token& operator=(const token& other) = delete;
@@ -24,7 +22,7 @@ class tagged_semaphore {
         }
 
         void invalidate() noexcept {
-            assert(!is_valid());
+            assert(is_valid());
             valid = false;
         }
 

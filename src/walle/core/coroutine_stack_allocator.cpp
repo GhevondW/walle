@@ -43,7 +43,7 @@ coroutine_stack_allocator& coroutine_stack_allocator::operator=(coroutine_stack_
 void coroutine_stack_allocator::deallocate(coroutine_stack stack) noexcept {
     assert(is_valid());
     assert(stack._ptr != nullptr);
-    assert(stack._size = _default_size);
+    assert(stack._size == _default_size);
 
     void* ptr = stack.top();
     _memory_resource->deallocate(static_cast<std::byte*>(ptr) - _default_size, stack._size);

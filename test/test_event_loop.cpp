@@ -141,18 +141,18 @@ TEST_F(EventLoopTest, CurrentExecutor) {
     walle::sync::wait_group wg;
     wg.add(1);
 
-    loop.submit([&]() { 
+    loop.submit([&]() {
         EXPECT_TRUE(&loop == utils::current_executor::get());
         dummy_task(counter);
-        utils::current_executor::get()->submit([&](){
+        utils::current_executor::get()->submit([&]() {
             dummy_task(counter);
-            utils::current_executor::get()->submit([&](){
+            utils::current_executor::get()->submit([&]() {
                 dummy_task(counter);
                 wg.done();
             });
         });
     });
-    
+
     wg.wait();
     // Wait for the task to execute
     loop.stop();

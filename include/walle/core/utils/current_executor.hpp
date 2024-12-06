@@ -4,11 +4,9 @@
 
 #include <walle/core/executor.hpp>
 
-namespace walle::core::utils
-{
-    
-struct current_executor
-{
+namespace walle::core::utils {
+
+struct current_executor {
     struct no_execution_context_error : std::runtime_error {
         using std::runtime_error::runtime_error;
     };
@@ -29,11 +27,8 @@ struct current_executor
 
 private:
     static void set(executor_i* current) noexcept;
-    static void reset() noexcept;
 
     static thread_local executor_i* current_;
 };
 
-
 } // namespace walle::core::utils
-
