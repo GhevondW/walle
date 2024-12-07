@@ -1,4 +1,3 @@
-#include <__thread/id.h>
 #include <atomic>
 #include <chrono>
 #include <gtest/gtest.h>

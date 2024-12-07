@@ -41,7 +41,7 @@ struct coroutine_stack_allocator {
     coroutine_stack_allocator(coroutine_stack_allocator&& other) noexcept;
     coroutine_stack_allocator& operator=(coroutine_stack_allocator&& other) noexcept;
 
-    ~coroutine_stack_allocator() noexcept = default;
+    ~coroutine_stack_allocator() = default;
 
     [[nodiscard]] coroutine_stack allocate();
     void deallocate(coroutine_stack stack) noexcept;

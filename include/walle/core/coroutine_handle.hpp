@@ -22,7 +22,7 @@ public:
 
     struct suspend_context_t {
         suspend_context_t() noexcept = default;
-        virtual ~suspend_context_t() noexcept = default;
+        virtual ~suspend_context_t() = default;
         suspend_context_t(const suspend_context_t&) = delete;
         suspend_context_t(suspend_context_t&&) noexcept = delete;
         suspend_context_t& operator=(const suspend_context_t&) = delete;
@@ -36,7 +36,7 @@ public:
 
     static coroutine_handle create(flow_t flow, coroutine_stack_allocator&& alloc = coroutine_stack_allocator {});
 
-    ~coroutine_handle() noexcept;
+    ~coroutine_handle();
     coroutine_handle(const coroutine_handle&) = delete;
     coroutine_handle(coroutine_handle&&) noexcept;
 
