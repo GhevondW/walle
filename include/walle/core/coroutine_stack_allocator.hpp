@@ -33,7 +33,7 @@ private:
 
 struct coroutine_stack_allocator {
     explicit coroutine_stack_allocator(std::pmr::memory_resource* resource = std::pmr::get_default_resource(),
-                                       std::size_t default_size = 128000);
+                                       std::size_t default_size = 4194304);
 
     coroutine_stack_allocator(const coroutine_stack_allocator& other) = default;
     coroutine_stack_allocator& operator=(const coroutine_stack_allocator& other) = delete;

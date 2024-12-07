@@ -23,7 +23,7 @@ function(walle_setup_dependencies)
 
   # Define BOOST_USE_ASAN, 
   # TODO : change it with my asan option
-  add_compile_definitions(BOOST_USE_ASAN)
+  # add_compile_definitions(BOOST_USE_ASAN)
   CPMAddPackage(
     NAME Boost
     VERSION 1.84.0
