@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstddef>
-#include <memory_resource>
+#include <walle/core/malloc_free_memory_resource.hpp>
 
 namespace walle::core {
 
@@ -32,7 +32,7 @@ private:
 };
 
 struct coroutine_stack_allocator {
-    explicit coroutine_stack_allocator(std::pmr::memory_resource* resource = std::pmr::get_default_resource(),
+    explicit coroutine_stack_allocator(std::pmr::memory_resource* resource = malloc_free_memory_resource::get_global(),
                                        std::size_t default_size = 256000);
 
     coroutine_stack_allocator(const coroutine_stack_allocator& other) = default;

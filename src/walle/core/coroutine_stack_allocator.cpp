@@ -33,9 +33,6 @@ coroutine_stack_allocator& coroutine_stack_allocator::operator=(coroutine_stack_
     assert(is_valid());
 
     void* data_ptr = _memory_resource->allocate(_default_size);
-    if (data_ptr == nullptr) {
-        throw std::bad_alloc();
-    }
 
     return coroutine_stack {reinterpret_cast<std::byte*>(data_ptr) + _default_size, _default_size};
 }
