@@ -25,6 +25,7 @@ function(walle_add_gtest test_name test_source)
     ${test_name}
     PRIVATE walle::walle_options
             walle::library
+            # Boost::context
             gtest
             gtest_main)
   add_test(NAME ${test_name} COMMAND ${test_name})
@@ -39,4 +40,5 @@ walle_add_gtest(test_sync_wait_group test_sync_wait_group.cpp)
 walle_add_gtest(test_unbounded_blocking_queue test_unbounded_blocking_queue.cpp)
 walle_add_gtest(test_event_loop test_event_loop.cpp)
 walle_add_gtest(test_manual_executor test_manual_executor.cpp)
+walle_add_gtest(test_thread_pool test_thread_pool.cpp)
 

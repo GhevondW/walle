@@ -24,7 +24,7 @@ struct suspend_fcontext : coroutine_handle::suspend_context_t {
     suspend_fcontext& operator=(const suspend_fcontext&) = delete;
     suspend_fcontext& operator=(suspend_fcontext&&) noexcept = delete;
 
-    ~suspend_fcontext() noexcept override = default;
+    ~suspend_fcontext() override = default;
 
     void suspend() override {
         _fctx = boost::context::detail::jump_fcontext(_fctx, _impl).fctx;
@@ -108,8 +108,8 @@ struct coroutine_handle::impl {
     std::exception_ptr _exception {};
 };
 
-coroutine_handle::coroutine_handle(std::unique_ptr<typename coroutine_handle::impl> impl) noexcept
-    : _impl(std::move(impl)) {}
+coroutine_handle::coroutine_handle(std::unique_ptr<typename coroutine_handle::impl> in_impl) noexcept
+    : _impl(std::move(in_impl)) {}
 
 coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator&& alloc) {
     if (flow.empty()) {
@@ -137,7 +137,7 @@ coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator
     return coroutine_handle(std::move(impl));
 }
 
-coroutine_handle::~coroutine_handle() noexcept {
+coroutine_handle::~coroutine_handle() {
     if (_impl == nullptr || is_done()) {
         return;
     }

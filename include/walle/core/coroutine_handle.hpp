@@ -36,7 +36,7 @@ public:
 
     static coroutine_handle create(flow_t flow, coroutine_stack_allocator&& alloc = coroutine_stack_allocator {});
 
-    ~coroutine_handle() noexcept;
+    ~coroutine_handle();
     coroutine_handle(const coroutine_handle&) = delete;
     coroutine_handle(coroutine_handle&&) noexcept;
 

@@ -43,7 +43,7 @@ public:
         return *this;
     }
 
-    ~fast_pimpl() noexcept {
+    ~fast_pimpl() {
         static_assert(noexcept(std::declval<T*>()->~T()));
         static_assert(Size != 0);
         static_assert(sizeof(T) == Size);
