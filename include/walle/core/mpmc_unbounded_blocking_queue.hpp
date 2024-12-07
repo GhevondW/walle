@@ -2,6 +2,8 @@
 
 #include <list>
 #include <optional>
+#include <mutex>
+#include <condition_variable>
 
 namespace walle::core {
 
