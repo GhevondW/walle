@@ -108,8 +108,8 @@ struct coroutine_handle::impl {
     std::exception_ptr _exception {};
 };
 
-coroutine_handle::coroutine_handle(std::unique_ptr<typename coroutine_handle::impl> impl) noexcept
-    : _impl(std::move(impl)) {}
+coroutine_handle::coroutine_handle(std::unique_ptr<typename coroutine_handle::impl> in_impl) noexcept
+    : _impl(std::move(in_impl)) {}
 
 coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator&& alloc) {
     if (flow.empty()) {
