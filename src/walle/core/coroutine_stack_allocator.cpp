@@ -32,12 +32,12 @@ coroutine_stack_allocator& coroutine_stack_allocator::operator=(coroutine_stack_
 [[nodiscard]] coroutine_stack coroutine_stack_allocator::allocate() {
     assert(is_valid());
 
-    void* data_ptr = _memory_resource->allocate(_default_size, alignof(std::max_align_t));
+    void* data_ptr = _memory_resource->allocate(_default_size);
     if (data_ptr == nullptr) {
         throw std::bad_alloc();
     }
 
-    return coroutine_stack {static_cast<std::byte*>(data_ptr) + _default_size, _default_size};
+    return coroutine_stack {reinterpret_cast<std::byte*>(data_ptr) + _default_size, _default_size};
 }
 
 void coroutine_stack_allocator::deallocate(coroutine_stack stack) noexcept {

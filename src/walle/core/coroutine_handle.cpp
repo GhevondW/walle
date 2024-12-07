@@ -61,21 +61,23 @@ boost::context::detail::transfer_t frame_exit(boost::context::detail::transfer_t
 template <typename Impl>
 void frame_entry(boost::context::detail::transfer_t transfer) noexcept {
     auto impl = static_cast<Impl*>(transfer.data);
-    assert(transfer.fctx != nullptr);
-    assert(impl != nullptr);
+    {
+        assert(transfer.fctx != nullptr);
+        assert(impl != nullptr);
 
-    suspend_fcontext suspender(transfer.fctx, impl);
+        suspend_fcontext suspender(transfer.fctx, impl);
 
-    try {
-        transfer = boost::context::detail::jump_fcontext(transfer.fctx, nullptr);
-        impl->run(suspender);
-    } catch (const forced_unwind& error) {
-        transfer = {error.fctx, nullptr};
-    } catch (const std::exception&) {
-        impl->_exception = std::current_exception();
+        try {
+            transfer = boost::context::detail::jump_fcontext(transfer.fctx, nullptr);
+            impl->run(suspender);
+        } catch (const forced_unwind& error) {
+            transfer = {error.fctx, nullptr};
+        } catch (const std::exception&) {
+            impl->_exception = std::current_exception();
+        }
+
+        assert(nullptr != transfer.fctx);
     }
-
-    assert(nullptr != transfer.fctx);
     boost::context::detail::ontop_fcontext(transfer.fctx, impl, frame_exit<Impl>);
     assert(false); // we must never get here.
 }
@@ -129,8 +131,13 @@ coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator
         throw;
     }
 
-    auto* fctx =
-        boost::context::detail::make_fcontext(stack.top(), stack.size(), &aux::frame_entry<coroutine_handle::impl>);
+    void* stack_top = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(stack.top()) - static_cast<uintptr_t>(64));
+    void* stack_bottom =
+        reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(stack.top()) - static_cast<uintptr_t>(stack.size()));
+    // create fast-context
+    const std::size_t size = reinterpret_cast<uintptr_t>(stack_top) - reinterpret_cast<uintptr_t>(stack_bottom);
+
+    auto* fctx = boost::context::detail::make_fcontext(stack_top, size, &aux::frame_entry<coroutine_handle::impl>);
     assert(fctx != nullptr);
 
     impl->_machine_context = boost::context::detail::jump_fcontext(fctx, impl.get()).fctx;
