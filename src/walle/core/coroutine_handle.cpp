@@ -3,7 +3,7 @@
 #include "walle/core/error.hpp"
 
 // TODO : do not include a header from detail
-#define BOOST_USE_ASAN
+// #define BOOST_USE_ASAN
 #include <boost/context/detail/fcontext.hpp>
 #include <cassert>
 #include <exception>

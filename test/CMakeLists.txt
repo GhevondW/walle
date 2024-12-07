@@ -25,6 +25,7 @@ function(walle_add_gtest test_name test_source)
     ${test_name}
     PRIVATE walle::walle_options
             walle::library
+            Boost::context
             gtest
             gtest_main)
   add_test(NAME ${test_name} COMMAND ${test_name})

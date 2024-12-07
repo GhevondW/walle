@@ -5,11 +5,15 @@
 
 #include <iostream>
 
+#include <boost/context/fiber.hpp>
+
 //////////////////////////////////////////////////////////////////////
 
 struct TreeNode;
 
 using TreeNodePtr = std::shared_ptr<TreeNode>;
+
+namespace ctx=boost::context;
 
 struct TreeNode {
     TreeNodePtr left;
@@ -304,20 +308,43 @@ struct Threads {
     }
 };
 
-TEST(CoroutineHandle, Threads) {
+// TEST(CoroutineHandle, Threads) {
+//     size_t steps = 0;
+
+//     auto coro = walle::core::coroutine_handle::create([&steps](auto self) {
+//         ++steps;
+//         self.suspend();
+//         ++steps;
+//         // self.suspend();
+//         // ++steps;
+//     });
+
+//     auto step = [&coro]() { coro.resume(); };
+
+//     // Simulate fiber running on thread pool
+//     Threads threads;
+
+//     threads.Run(step);
+//     ASSERT_EQ(steps, 1);
+
+//     threads.Run(step);
+//     ASSERT_EQ(steps, 2);
+
+//     // threads.Run(step);
+//     // ASSERT_EQ(steps, 3);
+// }
+
+TEST(CoroutineHandleBoost, Threads) {
     size_t steps = 0;
 
-    auto coro = walle::core::coroutine_handle::create([&steps](auto self) {
+    ctx::fiber source{[&steps](ctx::fiber&& sink){
         ++steps;
-        self.suspend();
+        sink=std::move(sink).resume();
         ++steps;
-        // self.suspend();
-        // ++steps;
-    });
+        return std::move(sink);
+    }};
+    auto step = [&source]() { source = std::move(source).resume(); };
 
-    auto step = [&coro]() { coro.resume(); };
-
-    // Simulate fiber running on thread pool
     Threads threads;
 
     threads.Run(step);
@@ -326,8 +353,10 @@ TEST(CoroutineHandle, Threads) {
     threads.Run(step);
     ASSERT_EQ(steps, 2);
 
-    // threads.Run(step);
-    // ASSERT_EQ(steps, 3);
+    // for (int j=0;j<10;++j) {
+    //     source=std::move(source).resume();
+    //     std::cout << steps << " ";
+    // }
 }
 
 void TreeWalk(TreeNodePtr node, auto ctx) {
