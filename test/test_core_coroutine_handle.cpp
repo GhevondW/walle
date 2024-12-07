@@ -309,8 +309,8 @@ TEST(CoroutineHandle, Threads) {
 
     auto coro = walle::core::coroutine_handle::create([&steps](auto& self) {
         ++steps;
-        // self.suspend();
-        // ++steps;
+        self.suspend();
+        ++steps;
         // self.suspend();
         // ++steps;
     });
@@ -323,8 +323,8 @@ TEST(CoroutineHandle, Threads) {
     threads.Run(step);
     ASSERT_EQ(steps, 1);
 
-    // threads.Run(step);
-    // ASSERT_EQ(steps, 2);
+    threads.Run(step);
+    ASSERT_EQ(steps, 2);
 
     // threads.Run(step);
     // ASSERT_EQ(steps, 3);

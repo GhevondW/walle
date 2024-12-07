@@ -15,7 +15,7 @@ namespace aux {
 
 template <typename Impl>
 struct suspend_fcontext : coroutine_handle::suspend_context_t {
-    explicit suspend_fcontext(boost::context::detail::fcontext_t& fctx, Impl* impl) noexcept
+    explicit suspend_fcontext(boost::context::detail::fcontext_t fctx, Impl* impl) noexcept
         : _fctx(fctx)
         , _impl(impl) {}
 
@@ -27,11 +27,19 @@ struct suspend_fcontext : coroutine_handle::suspend_context_t {
     ~suspend_fcontext() override = default;
 
     void suspend() override {
+        if(_fctx == nullptr) {
+            std::terminate();
+        }
+
         _fctx = boost::context::detail::jump_fcontext(_fctx, _impl).fctx;
+
+        if(_fctx == nullptr) {
+            std::terminate();
+        }
     }
 
 private:
-    boost::context::detail::fcontext_t& _fctx;
+    boost::context::detail::fcontext_t _fctx;
     Impl* _impl;
 };
 
