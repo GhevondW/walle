@@ -20,19 +20,21 @@ public:
         using logic_error::logic_error;
     };
 
-    struct suspend_context_t {
-        suspend_context_t() noexcept = default;
-        virtual ~suspend_context_t() = default;
-        suspend_context_t(const suspend_context_t&) = delete;
-        suspend_context_t(suspend_context_t&&) noexcept = delete;
-        suspend_context_t& operator=(const suspend_context_t&) = delete;
-        suspend_context_t& operator=(suspend_context_t&&) noexcept = delete;
+    struct suspend_context {
+        suspend_context(void* context, impl* impl) noexcept 
+            : _context(context)
+            , _impl(impl)
+        {}
+        ~suspend_context() = default;
 
         // can not be noexcept because of forced unwinding
-        virtual void suspend() = 0; // maybe noexcept and const
+        void suspend();
+    private:
+        void* _context = nullptr;
+        impl* _impl = nullptr;
     };
 
-    using flow_t = fu2::unique_function<void(suspend_context_t&)>;
+    using flow_t = fu2::unique_function<void(suspend_context)>;
 
     static coroutine_handle create(flow_t flow, coroutine_stack_allocator&& alloc = coroutine_stack_allocator {});
 
