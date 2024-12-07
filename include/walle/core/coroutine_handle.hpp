@@ -29,7 +29,7 @@ public:
 
         // can not be noexcept because of forced unwinding
         void suspend();
-    private:
+    // private:
         void* _context = nullptr;
         impl* _impl = nullptr;
     };

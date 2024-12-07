@@ -77,7 +77,7 @@ void frame_entry(boost::context::detail::transfer_t transfer) noexcept {
         try {
             transfer = boost::context::detail::jump_fcontext(transfer.fctx, nullptr);
             coroutine_handle::suspend_context suspender(transfer.fctx, impl);
-            impl->run(suspender);
+            transfer.fctx = impl->run(suspender);
         } catch (const forced_unwind& error) {
             transfer = {error.fctx, nullptr};
         } catch (const std::exception&) {
@@ -114,8 +114,9 @@ struct coroutine_handle::impl {
         , _stack(stack)
         , _exception(nullptr) {}
 
-    void run(suspend_context ctx) {
+    void* run(suspend_context ctx) {
         _flow(ctx);
+        return ctx._context;
     }
 
     void deallocate_stack() noexcept {
