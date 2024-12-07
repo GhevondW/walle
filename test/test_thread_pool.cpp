@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <thread>
+#include <algorithm>
 
 #include <walle/core/thread_pool.hpp>
 

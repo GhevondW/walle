@@ -65,10 +65,9 @@ void frame_entry(boost::context::detail::transfer_t transfer) noexcept {
         assert(transfer.fctx != nullptr);
         assert(impl != nullptr);
 
-        suspend_fcontext suspender(transfer.fctx, impl);
-
         try {
             transfer = boost::context::detail::jump_fcontext(transfer.fctx, nullptr);
+            suspend_fcontext suspender(transfer.fctx, impl);
             impl->run(suspender);
         } catch (const forced_unwind& error) {
             transfer = {error.fctx, nullptr};
@@ -131,13 +130,13 @@ coroutine_handle coroutine_handle::create(flow_t flow, coroutine_stack_allocator
         throw;
     }
 
-    void* stack_top = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(stack.top()) - static_cast<uintptr_t>(64));
-    void* stack_bottom =
-        reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(stack.top()) - static_cast<uintptr_t>(stack.size()));
-    // create fast-context
-    const std::size_t size = reinterpret_cast<uintptr_t>(stack_top) - reinterpret_cast<uintptr_t>(stack_bottom);
+    // void* stack_top = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(stack.top()) - static_cast<uintptr_t>(64));
+    // void* stack_bottom =
+    //     reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(stack.top()) - static_cast<uintptr_t>(stack.size()));
+    // // create fast-context
+    // const std::size_t size = reinterpret_cast<uintptr_t>(stack_top) - reinterpret_cast<uintptr_t>(stack_bottom);
 
-    auto* fctx = boost::context::detail::make_fcontext(stack_top, size, &aux::frame_entry<coroutine_handle::impl>);
+    auto* fctx = boost::context::detail::make_fcontext(stack.top(), stack.size(), &aux::frame_entry<coroutine_handle::impl>);
     assert(fctx != nullptr);
 
     impl->_machine_context = boost::context::detail::jump_fcontext(fctx, impl.get()).fctx;
