@@ -8,12 +8,12 @@ namespace walle::core {
 template <typename T>
 class mpmc_unbounded_blocking_queue {
 public:
-    mpmc_unbounded_blocking_queue() = default;
+    mpmc_unbounded_blocking_queue() noexcept = default;
     mpmc_unbounded_blocking_queue(const mpmc_unbounded_blocking_queue&) = delete;
     mpmc_unbounded_blocking_queue(mpmc_unbounded_blocking_queue&&) noexcept = delete;
     mpmc_unbounded_blocking_queue& operator=(const mpmc_unbounded_blocking_queue&) = delete;
     mpmc_unbounded_blocking_queue& operator=(mpmc_unbounded_blocking_queue&&) noexcept = delete;
-    ~mpmc_unbounded_blocking_queue() noexcept = default;
+    ~mpmc_unbounded_blocking_queue() = default;
 
     bool push(const T& value);
     bool push(T&& value);
