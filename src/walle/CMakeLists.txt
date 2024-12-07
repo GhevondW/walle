@@ -4,6 +4,7 @@ add_library(walle_library
     ${CMAKE_CURRENT_SOURCE_DIR}/core/coroutine_handle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/coroutine_stack_allocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/event_loop.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/malloc_free_memory_resource.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/manual_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/core/thread_pool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/sync/semaphore.cpp
