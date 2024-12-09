@@ -35,7 +35,7 @@ struct TreeNode {
 class TreeIterator {
 public:
     explicit TreeIterator(TreeNodePtr root)
-        : walker_(walle::core::coroutine_handle::create([this, root](auto& self) { TreeWalk(root, self); })) {}
+        : walker_(walle::core::coroutine_handle::create([this, root](auto self) { TreeWalk(root, self); })) {}
 
     bool TryNext() {
         walker_.resume();
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    void TreeWalk(TreeNodePtr node, auto& ctx) {
+    void TreeWalk(TreeNodePtr node, auto ctx) {
         if (node->left) {
             TreeWalk(node->left, ctx);
         }
@@ -70,7 +70,7 @@ private:
 TEST(CoroutineHandle, JustWorks) {
     int global = 1;
 
-    auto handle = walle::core::coroutine_handle::create([&global](auto& ctx) {
+    auto handle = walle::core::coroutine_handle::create([&global](auto ctx) {
         std::cout << "coro -> #1" << std::endl;
         EXPECT_EQ(global++, 1);
         ctx.suspend();
@@ -98,7 +98,7 @@ TEST(CoroutineHandle, JustWorks) {
 TEST(CoroutineHandle, ResumeOnFinishedCoroutine) {
     int global = 0;
 
-    auto handle = walle::core::coroutine_handle::create([&global](auto& ctx) {
+    auto handle = walle::core::coroutine_handle::create([&global](auto ctx) {
         std::cout << "coro -> #1" << std::endl;
         EXPECT_EQ(global, 1);
         ++global;
@@ -119,7 +119,7 @@ TEST(CoroutineHandle, Exceptions) {
         using runtime_error::runtime_error;
     };
 
-    auto handle = walle::core::coroutine_handle::create([&global](auto& ctx) {
+    auto handle = walle::core::coroutine_handle::create([&global](auto ctx) {
         std::cout << "coro -> #1" << std::endl;
         EXPECT_EQ(++global, 1);
         ctx.suspend();
@@ -156,7 +156,7 @@ TEST(CoroutineHandle, DestroyUnfinishedCoroutine) {
     };
 
     {
-        auto handle = walle::core::coroutine_handle::create([&global](auto& ctx) {
+        auto handle = walle::core::coroutine_handle::create([&global](auto ctx) {
             std::cout << "coro -> #2" << std::endl;
             test_struct ts(global);
             EXPECT_EQ(global, 1);
@@ -181,7 +181,7 @@ TEST(CoroutineHandle, DestroyUnfinishedCoroutine) {
 TEST(CoroutineHandle, Nested) {
     int counter = 0;
 
-    auto execution_one = walle::core::coroutine_handle::create([&counter](auto& suspender) {
+    auto execution_one = walle::core::coroutine_handle::create([&counter](auto suspender) {
         EXPECT_EQ(++counter, 2);
         std::cout << "Step 2" << '\n';
         suspender.suspend();
@@ -190,7 +190,7 @@ TEST(CoroutineHandle, Nested) {
         std::cout << "Step 4" << '\n';
     });
 
-    auto execution_two = walle::core::coroutine_handle::create([&execution_one, &counter](auto& suspender) {
+    auto execution_two = walle::core::coroutine_handle::create([&execution_one, &counter](auto suspender) {
         EXPECT_EQ(++counter, 1);
         std::cout << "Step 1" << '\n';
         execution_one.resume();
@@ -199,7 +199,7 @@ TEST(CoroutineHandle, Nested) {
         std::cout << "Step 3" << '\n';
         execution_one.resume();
 
-        auto nested = walle::core::coroutine_handle::create([&counter](auto& suspender) {
+        auto nested = walle::core::coroutine_handle::create([&counter](auto suspender) {
             EXPECT_EQ(++counter, 5);
             std::cout << "Step 5" << '\n';
             suspender.suspend();
@@ -223,7 +223,7 @@ TEST(CoroutineHandle, Nested) {
 TEST(CoroutineHandle, Suspend) {
     int step = 0;
 
-    auto coro = walle::core::coroutine_handle::create([&step](auto& self) {
+    auto coro = walle::core::coroutine_handle::create([&step](auto self) {
         ++step;
         self.suspend();
         ++step;
@@ -246,7 +246,7 @@ TEST(CoroutineHandle, Suspend) {
 TEST(CoroutineHandle, SuspendForLoop) {
     const size_t kIters = 128;
 
-    auto coro = walle::core::coroutine_handle::create([](auto& self) {
+    auto coro = walle::core::coroutine_handle::create([](auto self) {
         for (size_t i = 0; i < kIters; ++i) {
             self.suspend();
         }
@@ -266,7 +266,7 @@ TEST(CoroutineHandle, SuspendForLoop) {
 TEST(CoroutineHandle, Interleaving) {
     int step = 0;
 
-    auto a = walle::core::coroutine_handle::create([&step](auto& self) {
+    auto a = walle::core::coroutine_handle::create([&step](auto self) {
         ASSERT_EQ(step, 0);
         step = 1;
         self.suspend();
@@ -274,7 +274,7 @@ TEST(CoroutineHandle, Interleaving) {
         step = 3;
     });
 
-    auto b = walle::core::coroutine_handle::create([&step](auto& self) {
+    auto b = walle::core::coroutine_handle::create([&step](auto self) {
         ASSERT_EQ(step, 1);
         step = 2;
         self.suspend();
@@ -304,10 +304,12 @@ struct Threads {
     }
 };
 
+// sometimes this test fails with asan, fcontext does not support asan
+// https://github.com/boostorg/coroutine/issues/30
 TEST(CoroutineHandle, Threads) {
     size_t steps = 0;
 
-    auto coro = walle::core::coroutine_handle::create([&steps](auto& self) {
+    auto coro = walle::core::coroutine_handle::create([&steps](auto self) {
         ++steps;
         self.suspend();
         ++steps;
@@ -363,8 +365,8 @@ TEST(CoroutineHandle, Pipeline) {
 
     size_t steps = 0;
 
-    auto outer = walle::core::coroutine_handle::create([&](auto& self) {
-        auto inner = walle::core::coroutine_handle::create([&steps](auto& self) {
+    auto outer = walle::core::coroutine_handle::create([&](auto self) {
+        auto inner = walle::core::coroutine_handle::create([&steps](auto self) {
             for (size_t i = 0; i < kSteps; ++i) {
                 ++steps;
                 self.suspend();

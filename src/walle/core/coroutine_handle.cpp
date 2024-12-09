@@ -13,28 +13,6 @@ namespace walle::core {
 namespace {
 namespace aux {
 
-template <typename Impl>
-struct suspend_fcontext : coroutine_handle::suspend_context_t {
-    explicit suspend_fcontext(boost::context::detail::fcontext_t& fctx, Impl* impl) noexcept
-        : _fctx(fctx)
-        , _impl(impl) {}
-
-    suspend_fcontext(const suspend_fcontext&) = delete;
-    suspend_fcontext(suspend_fcontext&&) noexcept = delete;
-    suspend_fcontext& operator=(const suspend_fcontext&) = delete;
-    suspend_fcontext& operator=(suspend_fcontext&&) noexcept = delete;
-
-    ~suspend_fcontext() override = default;
-
-    void suspend() override {
-        _fctx = boost::context::detail::jump_fcontext(_fctx, _impl).fctx;
-    }
-
-private:
-    boost::context::detail::fcontext_t& _fctx;
-    Impl* _impl;
-};
-
 struct forced_unwind : std::exception {
     boost::context::detail::fcontext_t fctx {nullptr};
 
@@ -61,27 +39,32 @@ boost::context::detail::transfer_t frame_exit(boost::context::detail::transfer_t
 template <typename Impl>
 void frame_entry(boost::context::detail::transfer_t transfer) noexcept {
     auto impl = static_cast<Impl*>(transfer.data);
-    assert(transfer.fctx != nullptr);
-    assert(impl != nullptr);
+    {
+        assert(transfer.fctx != nullptr);
+        assert(impl != nullptr);
 
-    suspend_fcontext suspender(transfer.fctx, impl);
+        try {
+            transfer = boost::context::detail::jump_fcontext(transfer.fctx, nullptr);
+            coroutine_handle::suspend_context suspender(transfer.fctx, impl);
+            impl->run(suspender);
+        } catch (const forced_unwind& error) {
+            transfer = {error.fctx, nullptr};
+        } catch (const std::exception&) {
+            impl->_exception = std::current_exception();
+        }
 
-    try {
-        transfer = boost::context::detail::jump_fcontext(transfer.fctx, nullptr);
-        impl->run(suspender);
-    } catch (const forced_unwind& error) {
-        transfer = {error.fctx, nullptr};
-    } catch (const std::exception&) {
-        impl->_exception = std::current_exception();
+        assert(nullptr != transfer.fctx);
     }
-
-    assert(nullptr != transfer.fctx);
     boost::context::detail::ontop_fcontext(transfer.fctx, impl, frame_exit<Impl>);
     assert(false); // we must never get here.
 }
 
 } // namespace aux
 } // namespace
+
+void coroutine_handle::suspend_context::suspend() {
+    _machine_context = boost::context::detail::jump_fcontext(_machine_context, _impl).fctx;
+}
 
 struct coroutine_handle::impl {
     impl(coroutine_handle::flow_t flow, coroutine_stack_allocator alloc, coroutine_stack stack)
@@ -92,7 +75,7 @@ struct coroutine_handle::impl {
         , _stack(stack)
         , _exception(nullptr) {}
 
-    void run(suspend_context_t& ctx) {
+    void run(suspend_context ctx) {
         _flow(ctx);
     }
 
