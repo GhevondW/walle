@@ -9,9 +9,14 @@
 
 namespace walle::core {
 
-class event_loop : public executor_i {
+class event_loop : public std::enable_shared_from_this<event_loop>, public executor_i {
+private:
+    struct private_t{ explicit private_t() = default; };
+
 public:
-    event_loop();
+    event_loop(private_t);
+    
+    static std::shared_ptr<event_loop> make();
 
     event_loop(const event_loop&) = delete;
     event_loop(event_loop&&) noexcept = delete;

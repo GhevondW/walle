@@ -28,47 +28,48 @@ protected:
 
 // Test that the constructor initializes correctly
 TEST_F(EventLoopTest, ConstructorWorks) {
-    event_loop loop;
+    auto loop = event_loop::make();
     // Verify the event loop initializes without issues
+    loop->stop();
     SUCCEED(); // If no crash happens, the test passes
 }
 
 // Test submitting a task and ensuring it executes
 TEST_F(EventLoopTest, SubmitsTaskAndExecutes) {
-    event_loop loop;
+    auto loop = event_loop::make();
     std::atomic<int> counter = 0;
 
-    loop.submit([&]() { dummy_task(counter); });
+    loop->submit([&]() { dummy_task(counter); });
 
     // Wait for the task to execute
-    loop.stop(); // TODO use wait_group
+    loop->stop(); // TODO use wait_group
     ASSERT_EQ(counter, 1);
 }
 
 // Test multiple task submissions
 TEST_F(EventLoopTest, ExecutesMultipleTasks) {
-    event_loop loop;
+    auto loop = event_loop::make();
     std::atomic<int> counter = 0;
 
     for (int i = 0; i < 5; ++i) {
-        loop.submit([&]() { dummy_task(counter); });
+        loop->submit([&]() { dummy_task(counter); });
     }
 
     // Wait for tasks to execute
-    loop.stop();
+    loop->stop();
     ASSERT_EQ(counter, 5);
 }
 
 // Test stopping the event loop
 TEST_F(EventLoopTest, StopsEventLoop) {
-    event_loop loop;
+    auto loop = event_loop::make();
     std::atomic<int> counter = 0;
 
-    loop.submit([&]() { dummy_task(counter); });
-    loop.stop();
+    loop->submit([&]() { dummy_task(counter); });
+    loop->stop();
 
     // Submit another task after stopping
-    loop.submit([&]() { dummy_task(counter); });
+    loop->submit([&]() { dummy_task(counter); });
 
     // Wait to ensure tasks are not executed
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -79,29 +80,28 @@ TEST_F(EventLoopTest, StopsEventLoop) {
 TEST_F(EventLoopTest, DestructorStopsAndCleansUp) {
     std::atomic<int> counter = 0;
 
-    {
-        event_loop loop;
-        loop.submit([&]() { dummy_task(counter); });
-    } // Event loop goes out of scope and destructor is called
+    auto loop = event_loop::make();
+    loop->submit([&]() { dummy_task(counter); });
 
+    loop->stop();
     // Give some time for destructor cleanup
     ASSERT_EQ(counter, 1); // Task should have executed before destruction
 }
 
 // Test edge case: no tasks submitted
 TEST_F(EventLoopTest, NoTasksSubmitted) {
-    event_loop loop;
-    loop.stop();
+    auto loop = event_loop::make();
+    loop->stop();
     SUCCEED(); // Ensure no crash occurs
 }
 
 // Test submitting tasks after the loop is stopped
 TEST_F(EventLoopTest, SubmitAfterStopDoesNothing) {
-    event_loop loop;
-    loop.stop();
+    auto loop = event_loop::make();
+    loop->stop();
 
     std::atomic<int> counter = 0;
-    loop.submit([&]() { dummy_task(counter); });
+    loop->submit([&]() { dummy_task(counter); });
 
     // Wait to ensure task is not executed
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -110,14 +110,14 @@ TEST_F(EventLoopTest, SubmitAfterStopDoesNothing) {
 
 // Test submitting tasks after the loop is stopped
 TEST_F(EventLoopTest, StressTest) {
-    event_loop loop;
+    auto loop = event_loop::make();
 
     std::vector<std::thread> workers;
     std::atomic<int> counter = 0;
     for (int i = 0; i < 10; ++i) {
         workers.push_back(std::thread([&loop, &counter]() {
             for (int i = 0; i < 10000; ++i) {
-                loop.submit([&]() { dummy_task(counter); });
+                loop->submit([&]() { dummy_task(counter); });
             }
         }));
     }
@@ -128,21 +128,21 @@ TEST_F(EventLoopTest, StressTest) {
         }
     }
 
-    loop.stop();
+    loop->stop();
 
     ASSERT_EQ(counter, 10000 * 10); // No tasks should execute
 }
 
 TEST_F(EventLoopTest, CurrentExecutor) {
-    event_loop loop;
+    auto loop = event_loop::make();
     std::atomic<int> counter = 0;
     std::atomic<int> flag = 0;
 
     walle::sync::wait_group wg;
     wg.add(1);
 
-    loop.submit([&]() {
-        EXPECT_TRUE(&loop == utils::current_executor::get());
+    loop->submit([&]() {
+        EXPECT_TRUE(loop.get() == utils::current_executor::get());
         dummy_task(counter);
         utils::current_executor::get()->submit([&]() {
             dummy_task(counter);
@@ -155,7 +155,7 @@ TEST_F(EventLoopTest, CurrentExecutor) {
 
     wg.wait();
     // Wait for the task to execute
-    loop.stop();
+    loop->stop();
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     ASSERT_EQ(counter, 3);
 }
