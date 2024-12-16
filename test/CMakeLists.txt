@@ -25,8 +25,18 @@ function(walle_add_gtest test_name test_source)
     ${test_name}
     PRIVATE walle::walle_options
             walle::library
-            # Boost::config
-            # Boost::context
+            gtest
+            gtest_main)
+  add_test(NAME ${test_name} COMMAND ${test_name})
+endfunction()
+
+function(cortex_add_gtest test_name test_source)
+  add_executable(${test_name} ${test_source})
+  target_include_directories(${test_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(
+    ${test_name}
+    PRIVATE walle::walle_options
+            cortex::library
             gtest
             gtest_main)
   add_test(NAME ${test_name} COMMAND ${test_name})
@@ -34,7 +44,7 @@ endfunction()
 
 # walle_add_gtest(test_core_fast_pimpl "test_core_fast_pimpl.cpp;common/sample_pimpl.cpp")
 walle_add_gtest(test_std_resumable test_std_resumable.cpp)
-walle_add_gtest(test_core_coroutine_handle test_core_coroutine_handle.cpp)
+# walle_add_gtest(test_core_coroutine_handle test_core_coroutine_handle.cpp)
 walle_add_gtest(test_sync_semaphore test_sync_semaphore.cpp)
 walle_add_gtest(test_sync_tagged_semaphore test_sync_tagged_semaphore.cpp)
 walle_add_gtest(test_sync_wait_group test_sync_wait_group.cpp)
@@ -42,3 +52,5 @@ walle_add_gtest(test_unbounded_blocking_queue test_unbounded_blocking_queue.cpp)
 walle_add_gtest(test_event_loop test_event_loop.cpp)
 walle_add_gtest(test_manual_executor test_manual_executor.cpp)
 walle_add_gtest(test_thread_pool test_thread_pool.cpp)
+
+cortex_add_gtest(test_cortex_coroutine test_cortex_coroutine.cpp)
