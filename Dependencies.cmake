@@ -5,8 +5,8 @@ include(cmake/CPM.cmake)
 # targets
 function(walle_setup_dependencies)
 
-  find_package(boost CONFIG REQUIRED)
-  find_package(spdlog CONFIG REQUIRED)
+  find_package(fmt CONFIG REQUIRED)
+  find_package(boost_context REQUIRED CONFIG)
 
   # target_link_libraries(CPMExampleGtest fibonacci gtest gtest_main gmock)
   CPMAddPackage(
