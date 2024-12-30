@@ -1,6 +1,6 @@
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
+  message(STATUS "Setting build type to 'Debug' as none was specified.")
   set(CMAKE_BUILD_TYPE
       Debug
       CACHE STRING "Choose the type of build." FORCE)
@@ -38,8 +38,3 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND MSVC_VERSION GREATER 1900)
 else()
   message(STATUS "No colored compiler diagnostic set for '${CMAKE_CXX_COMPILER_ID}' compiler.")
 endif()
-
-
-# run vcvarsall when msvc is used
-include("${CMAKE_CURRENT_LIST_DIR}/VCEnvironment.cmake")
-run_vcvarsall()
