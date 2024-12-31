@@ -65,16 +65,6 @@ coroutine::~coroutine() = default;
 coroutine::coroutine(coroutine&& other) noexcept
     : _impl(std::move(other._impl)) {}
 
-// if (is_done()) {
-//     throw resume_on_completed_coroutine_error_t {"resume on finished coroutine"};
-// }
-
-// _impl->_machine_context = boost::context::detail::jump_fcontext(_impl->_machine_context, _impl.get()).fctx;
-
-// if (_impl->_exception) {
-//     std::rethrow_exception(_impl->_exception);
-// }
-
 void coroutine::resume() {
     assert(_impl);
     if (is_done()) {
