@@ -21,11 +21,11 @@ function(walle_setup_dependencies)
     OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt"
   )
 
-  # TODO : change it with my asan option
-  add_compile_definitions(BOOST_USE_ASAN)
-  set(BOOST_CONTEXT_IMPLEMENTATION "ucontext")
-  # boost is a huge project and directly downloading the 'alternate release'
-  # from github is much faster than recursively cloning the repo.
+  if(${walle_ENABLE_SANITIZER_ADDRESS})
+    add_compile_definitions(BOOST_USE_ASAN)
+    set(BOOST_CONTEXT_IMPLEMENTATION "ucontext")  
+  endif(${walle_ENABLE_SANITIZER_ADDRESS})
+  
   CPMAddPackage(
     NAME Boost
     VERSION 1.84.0
