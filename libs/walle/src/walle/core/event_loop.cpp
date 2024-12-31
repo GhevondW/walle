@@ -17,7 +17,7 @@ event_loop::event_loop(private_t)
 }
 
 std::shared_ptr<event_loop> event_loop::make() {
-    return std::make_shared<event_loop>(private_t{});
+    return std::make_shared<event_loop>(private_t {});
 }
 
 event_loop::~event_loop() {
@@ -37,9 +37,9 @@ void event_loop::submit(task_t task) {
 
 void event_loop::stop() {
     std::weak_ptr<event_loop> self = shared_from_this();
-    submit([self]() { 
-        if(auto ptr = self.lock()) {
-            ptr->_done = true; 
+    submit([self]() {
+        if (auto ptr = self.lock()) {
+            ptr->_done = true;
         }
     });
 

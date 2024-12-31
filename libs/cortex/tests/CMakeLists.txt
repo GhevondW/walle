@@ -23,4 +23,4 @@ function(walle_cortex_add_gtest test_name test_source)
   add_test(NAME ${test_name} COMMAND ${test_name})
 endfunction()
 
-walle_cortex_add_gtest(test_all test_all.cpp)
+walle_cortex_add_gtest(test_coroutine test_coroutine.cpp)
