@@ -21,16 +21,18 @@ function(walle_setup_dependencies)
     OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt"
   )
 
-  # Define BOOST_USE_ASAN, 
-  # TODO : change it with my asan option
-  add_compile_definitions(BOOST_USE_ASAN)
+  if(${walle_ENABLE_SANITIZER_ADDRESS})
+    add_compile_definitions(BOOST_USE_ASAN)
+    set(BOOST_CONTEXT_IMPLEMENTATION "ucontext")  
+  endif(${walle_ENABLE_SANITIZER_ADDRESS})
+  
   CPMAddPackage(
     NAME Boost
     VERSION 1.84.0
     URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
     URL_HASH SHA256=2e64e5d79a738d0fa6fb546c6e5c2bd28f88d268a2a080546f74e5ff98f29d0e
-    OPTIONS "BOOST_ENABLE_CMAKE ON" "BOOST_INCLUDE_LIBRARIES container\\\;asio\\\;context\\\;lockfree" # Note the escapes!
-  )  
+    OPTIONS "BOOST_ENABLE_CMAKE ON"
+  )
 
   CPMAddPackage(
     NAME function2

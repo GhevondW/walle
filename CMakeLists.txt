@@ -21,11 +21,10 @@ include(cmake/PreventInSourceBuilds.cmake)
 include(ProjectOptions.cmake)
 
 walle_setup_options()
+walle_local_options()
 
 include(Dependencies.cmake)
 walle_setup_dependencies()
-
-walle_local_options()
 
 # Helper function to print options in green
 function(print_option name value)
@@ -62,14 +61,3 @@ add_subdirectory(configured_files)
 # Adding the src:
 add_subdirectory(libs)
 
-# # Don't even look at tests if we're not top level
-# if(NOT PROJECT_IS_TOP_LEVEL)
-#   return()
-# endif()
-
-# # Adding the tests:
-# include(CTest)
-
-# if(BUILD_TESTING)
-#   add_subdirectory(test)
-# endif()

@@ -1,13 +1,13 @@
 # TODO add headers here too
 add_library(walle_cortex 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/all.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/coroutine.cpp
 )
 
 add_library(walle::cortex ALIAS walle_cortex)
 
 target_link_libraries(walle_cortex PRIVATE walle_options walle_warnings)
-# target_link_system_libraries(walle_cortex PUBLIC function2::function2)
-# target_link_system_libraries(walle_cortex PRIVATE Boost::context)
+target_link_system_libraries(walle_cortex PUBLIC function2::function2)
+target_link_system_libraries(walle_cortex PRIVATE Boost::context)
 
 target_include_directories(walle_cortex ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
