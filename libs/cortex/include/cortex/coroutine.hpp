@@ -10,7 +10,7 @@ namespace walle::cortex {
 class coroutine {
     struct impl;
 
-    explicit coroutine(std::shared_ptr<impl> impl) noexcept;
+    explicit coroutine(std::shared_ptr<impl> in_impl) noexcept;
 
 public:
     struct resume_on_completed_coroutine_error_t : std::logic_error {

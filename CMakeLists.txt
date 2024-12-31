@@ -62,14 +62,3 @@ add_subdirectory(configured_files)
 # Adding the src:
 add_subdirectory(libs)
 
-# # Don't even look at tests if we're not top level
-# if(NOT PROJECT_IS_TOP_LEVEL)
-#   return()
-# endif()
-
-# # Adding the tests:
-# include(CTest)
-
-# if(BUILD_TESTING)
-#   add_subdirectory(test)
-# endif()

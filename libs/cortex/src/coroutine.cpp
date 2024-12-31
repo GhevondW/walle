@@ -29,14 +29,14 @@ struct coroutine::impl {
     bool is_done {false};
 };
 
-coroutine::coroutine(std::shared_ptr<impl> impl) noexcept
-    : _impl(std::move(impl)) {}
+coroutine::coroutine(std::shared_ptr<impl> in_impl) noexcept
+    : _impl(std::move(in_impl)) {}
 
 coroutine coroutine::create([[maybe_unused]] flow_t in_flow) {
-    auto impl = std::make_shared<coroutine::impl>();
+    auto coro_impl = std::make_shared<coroutine::impl>();
 
     ctx::fiber fiber(
-        [weak_impl = std::weak_ptr<coroutine::impl>(impl), flow = std::move(in_flow)](ctx::fiber&& sink) mutable {
+        [weak_impl = std::weak_ptr<coroutine::impl>(coro_impl), flow = std::move(in_flow)](ctx::fiber&& sink) mutable {
             assert(!weak_impl.expired());
 
             fiber_suspend_context suspend_context(sink);
@@ -56,8 +56,8 @@ coroutine coroutine::create([[maybe_unused]] flow_t in_flow) {
             return std::move(sink).resume();
         });
 
-    impl->fiber = std::move(fiber).resume();
-    return coroutine(std::move(impl));
+    coro_impl->fiber = std::move(fiber).resume();
+    return coroutine(std::move(coro_impl));
 }
 
 coroutine::~coroutine() = default;
