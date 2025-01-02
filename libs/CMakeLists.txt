@@ -1,2 +1,3 @@
+add_subdirectory(core)
 add_subdirectory(cortex)
-# add_subdirectory(walle) TODO
+add_subdirectory(exec)
