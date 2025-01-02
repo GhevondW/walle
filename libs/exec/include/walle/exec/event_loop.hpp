@@ -5,12 +5,16 @@
 #include <mutex>
 #include <thread>
 
+#include <walle/core/non_copyable.hpp>
+#include <walle/core/non_movable.hpp>
 #include <walle/exec/executor.hpp>
 
 namespace walle::exec {
 
 class event_loop
-    : public std::enable_shared_from_this<event_loop>
+    : core::non_copyable
+    , core::non_movable
+    , public std::enable_shared_from_this<event_loop>
     , public executor_i {
 private:
     struct private_t {
@@ -22,10 +26,6 @@ public:
 
     static std::shared_ptr<event_loop> make();
 
-    event_loop(const event_loop&) = delete;
-    event_loop(event_loop&&) noexcept = delete;
-    event_loop& operator=(const event_loop&) = delete;
-    event_loop& operator=(event_loop&&) noexcept = delete;
     ~event_loop() override;
 
     void submit(task_t task) override;

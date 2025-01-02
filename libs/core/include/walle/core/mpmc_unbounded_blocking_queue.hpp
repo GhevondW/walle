@@ -5,16 +5,17 @@
 #include <mutex>
 #include <optional>
 
+#include <walle/core/non_copyable.hpp>
+#include <walle/core/non_movable.hpp>
+
 namespace walle::core {
 
 template <typename T>
-class mpmc_unbounded_blocking_queue {
+class mpmc_unbounded_blocking_queue
+    : non_copyable
+    , non_movable {
 public:
     mpmc_unbounded_blocking_queue() noexcept = default;
-    mpmc_unbounded_blocking_queue(const mpmc_unbounded_blocking_queue&) = delete;
-    mpmc_unbounded_blocking_queue(mpmc_unbounded_blocking_queue&&) noexcept = delete;
-    mpmc_unbounded_blocking_queue& operator=(const mpmc_unbounded_blocking_queue&) = delete;
-    mpmc_unbounded_blocking_queue& operator=(mpmc_unbounded_blocking_queue&&) noexcept = delete;
     ~mpmc_unbounded_blocking_queue() = default;
 
     bool push(const T& value);

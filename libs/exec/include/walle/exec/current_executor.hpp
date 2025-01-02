@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <walle/core/non_copyable.hpp>
+#include <walle/core/non_movable.hpp>
 #include <walle/exec/executor.hpp>
 
 namespace walle::exec {
@@ -11,12 +13,10 @@ struct current_executor {
         using std::runtime_error::runtime_error;
     };
 
-    struct scope_guard {
+    struct scope_guard
+        : private core::non_copyable
+        , core::non_movable {
         explicit scope_guard(executor_i* current) noexcept;
-        scope_guard(const scope_guard&) = delete;
-        scope_guard(scope_guard&&) noexcept = delete;
-        scope_guard& operator=(const scope_guard&) = delete;
-        scope_guard& operator=(scope_guard&&) noexcept = delete;
         ~scope_guard();
 
     private:
