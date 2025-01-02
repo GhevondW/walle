@@ -47,4 +47,4 @@ private:
     std::condition_variable _idle {};
 };
 
-} // namespace walle::sync
+} // namespace walle::core

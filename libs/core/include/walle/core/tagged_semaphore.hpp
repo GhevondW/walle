@@ -56,4 +56,4 @@ void tagged_semaphore<Tag>::release(toke_t&& in_token) {
     in_token.invalidate();
 }
 
-} // namespace walle::sync
+} // namespace walle::core

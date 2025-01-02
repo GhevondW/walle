@@ -3,10 +3,10 @@
 #include <gtest/gtest.h>
 #include <thread>
 #include <vector>
+#include <walle/core/wait_group.hpp>
+#include <walle/exec/current_executor.hpp>
 #include <walle/exec/event_loop.hpp>
 #include <walle/exec/executor.hpp> // Replace with actual path to executor_i and event_loop headers
-#include <walle/exec/current_executor.hpp>
-#include <walle/core/wait_group.hpp>
 
 using namespace walle::exec;
 

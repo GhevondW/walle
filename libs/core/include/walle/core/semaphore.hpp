@@ -28,4 +28,4 @@ private:
     std::condition_variable _cv;
 };
 
-} // namespace walle::sync
+} // namespace walle::core

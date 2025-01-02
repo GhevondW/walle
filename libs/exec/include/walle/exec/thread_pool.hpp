@@ -4,9 +4,9 @@
 #include <thread>
 #include <vector>
 
-#include <walle/exec/executor.hpp>
 #include <walle/core/mpmc_unbounded_blocking_queue.hpp>
 #include <walle/core/wait_group.hpp>
+#include <walle/exec/executor.hpp>
 
 namespace walle::exec {
 

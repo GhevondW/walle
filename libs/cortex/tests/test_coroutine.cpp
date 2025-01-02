@@ -1,5 +1,5 @@
-#include <walle/cortex/coroutine.hpp>
 #include <gtest/gtest.h>
+#include <walle/cortex/coroutine.hpp>
 
 #include <iostream>
 #include <sstream>
