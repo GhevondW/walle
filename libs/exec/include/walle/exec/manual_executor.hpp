@@ -4,11 +4,16 @@
 #include <queue>
 
 #include <stdexcept>
+#include <walle/core/non_copyable.hpp>
+#include <walle/core/non_movable.hpp>
 #include <walle/exec/executor.hpp>
 
 namespace walle::exec {
 
-class manual_executor : public executor_i {
+class manual_executor
+    : core::non_copyable
+    , core::non_movable
+    , public executor_i {
 public:
     struct empty_executor : std::runtime_error {
         using std::runtime_error::runtime_error;

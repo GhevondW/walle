@@ -5,20 +5,20 @@
 #include <vector>
 
 #include <walle/core/mpmc_unbounded_blocking_queue.hpp>
+#include <walle/core/non_copyable.hpp>
+#include <walle/core/non_movable.hpp>
 #include <walle/core/wait_group.hpp>
 #include <walle/exec/executor.hpp>
 
 namespace walle::exec {
 
-class thread_pool final : public executor_i {
+class thread_pool final
+    : core::non_copyable
+    , core::non_movable
+    , public executor_i {
 public:
     explicit thread_pool(std::size_t workers_count);
     ~thread_pool() final = default;
-
-    thread_pool(const thread_pool& other) = delete;
-    thread_pool(thread_pool&& other) noexcept = delete;
-    thread_pool& operator=(const thread_pool& other) = delete;
-    thread_pool& operator=(thread_pool&& other) noexcept = delete;
 
     void submit(task_t task) final;
 
