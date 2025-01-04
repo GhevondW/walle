@@ -22,9 +22,11 @@ public:
 
     void submit(task_t task) final;
 
+    // Maybe i need start function?
+    // void start();
     void wait_idle();
     // Maybe I do not need this stop
-    // i can do ot in dtor, for now this is ok.
+    // i can do it in dtor, for now this is ok.
     void stop();
 
     [[nodiscard]] std::size_t workers_count() const {

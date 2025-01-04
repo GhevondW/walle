@@ -27,6 +27,7 @@ public:
 
     using flow_t = fu2::unique_function<void(suspend_context&)>;
 
+    // TODO allocator support
     static coroutine create(flow_t in_flow);
 
     ~coroutine();
