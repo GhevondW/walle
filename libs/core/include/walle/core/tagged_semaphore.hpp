@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <walle/core/non_copyable.hpp>
 #include <walle/core/semaphore.hpp>
 
 #include <cstddef>
@@ -8,13 +9,11 @@
 namespace walle::core {
 
 template <typename Tag>
-class tagged_semaphore {
+class tagged_semaphore : non_copyable {
     struct token {
         token() = default;
         ~token() = default;
-        token(const token& other) = delete;
         token(token&& other) noexcept = default;
-        token& operator=(const token& other) = delete;
         token& operator=(token&& other) noexcept = default;
 
         [[nodiscard]] bool is_valid() const noexcept {

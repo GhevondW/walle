@@ -41,4 +41,10 @@ function(walle_setup_dependencies)
     GIT_TAG 4.2.1 # This should match the version you want to use
   )  
 
+  # CPMAddPackage(
+  #   NAME work_contract
+  #   GITHUB_REPOSITORY GhevondW/work_contract
+  #   GIT_TAG main
+  # )  
+
 endfunction()
