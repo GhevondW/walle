@@ -29,6 +29,7 @@ protected:
 // Test that the constructor initializes correctly
 TEST_F(EventLoopTest, ConstructorWorks) {
     auto loop = event_loop::make();
+    loop->start();
     // Verify the event loop initializes without issues
     loop->stop();
     SUCCEED(); // If no crash happens, the test passes
@@ -37,9 +38,10 @@ TEST_F(EventLoopTest, ConstructorWorks) {
 // Test submitting a task and ensuring it executes
 TEST_F(EventLoopTest, SubmitsTaskAndExecutes) {
     auto loop = event_loop::make();
+    loop->start();
     std::atomic<int> counter = 0;
 
-    loop->submit([&]() { dummy_task(counter); });
+    EXPECT_TRUE(loop->submit([&]() { dummy_task(counter); }));
 
     // Wait for the task to execute
     loop->stop(); // TODO use wait_group
@@ -49,6 +51,7 @@ TEST_F(EventLoopTest, SubmitsTaskAndExecutes) {
 // Test multiple task submissions
 TEST_F(EventLoopTest, ExecutesMultipleTasks) {
     auto loop = event_loop::make();
+    loop->start();
     std::atomic<int> counter = 0;
 
     for (int i = 0; i < 5; ++i) {
@@ -63,13 +66,14 @@ TEST_F(EventLoopTest, ExecutesMultipleTasks) {
 // Test stopping the event loop
 TEST_F(EventLoopTest, StopsEventLoop) {
     auto loop = event_loop::make();
+    loop->start();
     std::atomic<int> counter = 0;
 
     loop->submit([&]() { dummy_task(counter); });
     loop->stop();
 
     // Submit another task after stopping
-    loop->submit([&]() { dummy_task(counter); });
+    EXPECT_FALSE(loop->submit([&]() { dummy_task(counter); }));
 
     // Wait to ensure tasks are not executed
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -81,6 +85,7 @@ TEST_F(EventLoopTest, DestructorStopsAndCleansUp) {
     std::atomic<int> counter = 0;
 
     auto loop = event_loop::make();
+    loop->start();
     loop->submit([&]() { dummy_task(counter); });
 
     loop->stop();
@@ -91,6 +96,7 @@ TEST_F(EventLoopTest, DestructorStopsAndCleansUp) {
 // Test edge case: no tasks submitted
 TEST_F(EventLoopTest, NoTasksSubmitted) {
     auto loop = event_loop::make();
+    loop->start();
     loop->stop();
     SUCCEED(); // Ensure no crash occurs
 }
@@ -98,6 +104,7 @@ TEST_F(EventLoopTest, NoTasksSubmitted) {
 // Test submitting tasks after the loop is stopped
 TEST_F(EventLoopTest, SubmitAfterStopDoesNothing) {
     auto loop = event_loop::make();
+    loop->start();
     loop->stop();
 
     std::atomic<int> counter = 0;
@@ -111,6 +118,7 @@ TEST_F(EventLoopTest, SubmitAfterStopDoesNothing) {
 // Test submitting tasks after the loop is stopped
 TEST_F(EventLoopTest, StressTest) {
     auto loop = event_loop::make();
+    loop->start();
 
     std::vector<std::thread> workers;
     std::atomic<int> counter = 0;
@@ -135,6 +143,7 @@ TEST_F(EventLoopTest, StressTest) {
 
 TEST_F(EventLoopTest, CurrentExecutor) {
     auto loop = event_loop::make();
+    loop->start();
     std::atomic<int> counter = 0;
     std::atomic<int> flag = 0;
 

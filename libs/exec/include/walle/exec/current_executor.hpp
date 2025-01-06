@@ -24,6 +24,7 @@ struct current_executor {
     };
 
     static executor_i* get();
+    static executor_i* unsafe_get();
 
 private:
     static void set(executor_i* current) noexcept;

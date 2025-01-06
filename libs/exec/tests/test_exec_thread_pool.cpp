@@ -28,6 +28,7 @@ protected:
 // --- Constructor Tests ---
 TEST_F(ThreadPoolTest, Constructor_ValidWorkersCount) {
     walle::exec::thread_pool pool(4);
+    pool.start();
     ASSERT_EQ(pool.workers_count(), 4); // Check worker thread count
     pool.stop();
 }
@@ -40,6 +41,7 @@ TEST_F(ThreadPoolTest, Constructor_InvalidWorkersCount) {
 // --- Task Submission Tests ---
 TEST_F(ThreadPoolTest, Submit_SingleTask) {
     walle::exec::thread_pool pool(2);
+    pool.start();
     std::atomic<int> counter = 0;
 
     pool.submit([&counter] { increment_counter(counter); });
@@ -51,6 +53,7 @@ TEST_F(ThreadPoolTest, Submit_SingleTask) {
 
 TEST_F(ThreadPoolTest, Submit_MultipleTasks) {
     walle::exec::thread_pool pool(3);
+    pool.start();
     std::atomic<int> counter = 0;
 
     for (int i = 0; i < 123; ++i) {
@@ -64,6 +67,7 @@ TEST_F(ThreadPoolTest, Submit_MultipleTasks) {
 
 TEST_F(ThreadPoolTest, Submit_ConcurrentExecution) {
     walle::exec::thread_pool pool(4);
+    pool.start();
     std::atomic<int> counter = 0;
     std::mutex mtx;
     std::vector<std::thread::id> thread_ids;
@@ -90,6 +94,7 @@ TEST_F(ThreadPoolTest, Submit_ConcurrentExecution) {
 // --- Wait Idle Tests ---
 TEST_F(ThreadPoolTest, WaitIdle_BlocksUntilTasksComplete) {
     walle::exec::thread_pool pool(2);
+    pool.start();
     std::atomic<int> counter = 0;
 
     for (int i = 0; i < 5; ++i) {
@@ -111,6 +116,7 @@ TEST_F(ThreadPoolTest, WaitIdle_BlocksUntilTasksComplete) {
 // // --- Stop Tests ---
 // TEST_F(ThreadPoolTest, Stop_PreventsFurtherTaskExecution) {
 //     walle::core::thread_pool pool(2);
+//     pool.start();
 //     std::atomic<int> counter = 0;
 
 //     pool.submit([&counter] { increment_counter(counter); });
@@ -127,6 +133,7 @@ TEST_F(ThreadPoolTest, WaitIdle_BlocksUntilTasksComplete) {
 // --- Thread Safety Tests ---
 TEST_F(ThreadPoolTest, Submit_FromMultipleThreads) {
     walle::exec::thread_pool pool(4);
+    pool.start();
     std::atomic<int> counter = 0;
 
     auto submit_task = [&pool, &counter] {

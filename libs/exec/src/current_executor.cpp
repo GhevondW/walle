@@ -20,6 +20,10 @@ executor_i* current_executor::get() {
     return current_;
 }
 
+executor_i* current_executor::unsafe_get() {
+    return current_;
+}
+
 void current_executor::set(executor_i* current) noexcept {
     current_ = current;
 }

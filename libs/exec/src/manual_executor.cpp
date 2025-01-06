@@ -2,12 +2,25 @@
 
 namespace walle::exec {
 
-void manual_executor::submit(task_t task) {
+bool manual_executor::submit(task_t task) {
+    if (_state == state_e::k_stopped) {
+        return false;
+    }
+
     if (task.empty()) {
         throw empty_task {"the input task is empty"};
     }
 
     _tasks.push(std::move(task));
+    return true;
+}
+
+void manual_executor::start() {
+    _state = state_e::k_running;
+}
+
+void manual_executor::stop() {
+    _state = state_e::k_stopped;
 }
 
 [[nodiscard]] std::size_t manual_executor::tasks_count() const noexcept {

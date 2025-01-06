@@ -32,7 +32,7 @@ struct coroutine::impl {
 coroutine::coroutine(std::shared_ptr<impl> in_impl) noexcept
     : _impl(std::move(in_impl)) {}
 
-coroutine coroutine::create([[maybe_unused]] flow_t in_flow) {
+coroutine coroutine::create(flow_t in_flow) {
     auto coro_impl = std::make_shared<coroutine::impl>();
 
     ctx::fiber fiber(

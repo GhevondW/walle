@@ -1,7 +1,8 @@
 # TODO add headers here too
 add_library(walle_async 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/fiber.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/detail/fiber.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/go.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/session.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/yield.cpp
 )
 

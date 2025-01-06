@@ -10,6 +10,8 @@
 
 namespace walle::exec {
 
+// This class is used for testing.
+// this is the only class that is not concurrent
 class manual_executor
     : core::non_copyable
     , core::non_movable
@@ -26,7 +28,13 @@ public:
     manual_executor() = default;
     ~manual_executor() override = default;
 
-    void submit(task_t task) override;
+    bool submit(task_t task) override;
+
+    void start() override;
+    void stop() override;
+    state_e state() const noexcept override {
+        return _state;
+    }
 
     [[nodiscard]] std::size_t tasks_count() const noexcept;
 
@@ -39,7 +47,8 @@ public:
     void run_all();
 
 private:
-    std::queue<task_t> _tasks;
+    state_e _state {state_e::k_stopped};
+    std::queue<task_t> _tasks {};
 };
 
 } // namespace walle::exec

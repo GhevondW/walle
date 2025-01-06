@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstddef>
 #include <thread>
 #include <vector>
@@ -20,14 +21,16 @@ public:
     explicit thread_pool(std::size_t workers_count);
     ~thread_pool() final = default;
 
-    void submit(task_t task) final;
+    bool submit(task_t task) final;
 
-    // Maybe i need start function?
-    // void start();
     void wait_idle();
     // Maybe I do not need this stop
     // i can do it in dtor, for now this is ok.
-    void stop();
+    void start() override;
+    void stop() override;
+    state_e state() const noexcept override {
+        return _state.load();
+    }
 
     [[nodiscard]] std::size_t workers_count() const {
         return _workers_count;
@@ -38,6 +41,7 @@ private:
     void loop();
 
     const std::size_t _workers_count;
+    std::atomic<state_e> _state;
     core::mpmc_unbounded_blocking_queue<task_t> _tasks;
     std::vector<std::thread> _workers;
     core::wait_group _wait_group;

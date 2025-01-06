@@ -28,16 +28,18 @@ public:
 
     ~event_loop() override;
 
-    void submit(task_t task) override;
-    void stop();
+    bool submit(task_t task) override;
+    void start() override;
+    void stop() override;
+    state_e state() const noexcept override;
 
 private:
     void loop();
 
     std::thread _worker;
     std::list<task_t> _tasks; // guarded my _mtx
-    bool _done;
-    std::mutex _mtx;
+    state_e _state;
+    mutable std::mutex _mtx;
     std::condition_variable _cv;
 };
 

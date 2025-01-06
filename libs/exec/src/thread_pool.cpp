@@ -6,23 +6,32 @@ namespace walle::exec {
 
 thread_pool::thread_pool(std::size_t workers_count)
     : _workers_count(workers_count)
+    , _state(state_e::k_stopped)
     , _tasks()
     , _workers()
     , _wait_group() {
     if (_workers_count == 0) {
         throw std::invalid_argument {"the workers count can not be zero."};
     }
-
-    init();
 }
 
-void thread_pool::submit(task_t task) {
+bool thread_pool::submit(task_t task) {
+    if (_state.load() == state_e::k_stopped) {
+        return false;
+    }
+
     _wait_group.add();
     _tasks.push(std::move(task));
+    return true;
 }
 
 void thread_pool::wait_idle() {
     _wait_group.wait();
+}
+
+void thread_pool::start() {
+    init();
+    _state.store(state_e::k_running);
 }
 
 void thread_pool::stop() {
@@ -32,6 +41,7 @@ void thread_pool::stop() {
             worker.join();
         }
     }
+    _state.store(state_e::k_stopped);
 }
 
 void thread_pool::init() {
