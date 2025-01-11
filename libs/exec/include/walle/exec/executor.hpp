@@ -4,6 +4,7 @@
 
 namespace walle::exec {
 
+// Maybe scheduler? :)
 struct executor_i {
     using task_t = fu2::unique_function<void()>;
 

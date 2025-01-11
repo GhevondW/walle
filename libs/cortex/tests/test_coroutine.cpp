@@ -96,6 +96,12 @@ TEST(cortex_test_coroutine, just_works) {
     EXPECT_TRUE(handle.is_done());
 }
 
+TEST(cortex_test_coroutine, make_empty_coroutine) {
+    walle::cortex::coroutine coro;
+    EXPECT_TRUE(coro.is_done());
+    EXPECT_THROW(coro.resume(), walle::cortex::coroutine::resume_on_completed_coroutine_error_t);
+}
+
 TEST(cortex_test_coroutine, resume_on_finished_coroutine) {
     int global = 0;
 

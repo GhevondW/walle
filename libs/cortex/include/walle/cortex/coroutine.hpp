@@ -27,6 +27,8 @@ public:
 
     using flow_t = fu2::unique_function<void(suspend_context&)>;
 
+    coroutine() noexcept;
+
     // TODO allocator support
     static coroutine create(flow_t in_flow);
 
@@ -42,6 +44,7 @@ public:
 
 private:
     // TODO : maybe do not use shared_ptr? maybe use fast pimpl?
+    //        i use weak_ptr in impeentation so that is why i have shared here
     std::shared_ptr<impl> _impl;
 };
 

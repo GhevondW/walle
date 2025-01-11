@@ -8,7 +8,7 @@ add_library(walle_async
 add_library(walle::async ALIAS walle_async)
 
 target_link_libraries(walle_async PRIVATE walle_options walle_warnings)
-target_link_system_libraries(walle_async PUBLIC walle::cortex walle::exec function2::function2)
+target_link_system_libraries(walle_async PUBLIC walle::cortex walle::exec function2::function2 Boost::uuid)
 
 target_include_directories(walle_async ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_include_directories(walle_async ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)

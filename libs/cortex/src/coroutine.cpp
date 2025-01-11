@@ -1,6 +1,7 @@
 #include "walle/cortex/coroutine.hpp"
 
 #include <boost/context/fiber.hpp>
+#include <boost/context/fiber_ucontext.hpp>
 #include <cassert>
 #include <exception>
 #include <memory>
@@ -24,10 +25,17 @@ private:
 };
 
 struct coroutine::impl {
+    static impl make_done_impl() {
+        return {.fiber = ctx::fiber {}, .error = nullptr, .is_done = true};
+    }
+
     ctx::fiber fiber {};
     std::exception_ptr error {};
     bool is_done {false};
 };
+
+coroutine::coroutine() noexcept
+    : _impl(std::make_shared<impl>(impl::make_done_impl())) {}
 
 coroutine::coroutine(std::shared_ptr<impl> in_impl) noexcept
     : _impl(std::move(in_impl)) {}

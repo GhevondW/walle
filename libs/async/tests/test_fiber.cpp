@@ -14,7 +14,7 @@ TEST(async_test_fiber, just_works) {
 
     for (int i = 0; i < 1024; ++i) {
         wg.add();
-        walle::async::go(pool, [&wg]() {
+        walle::async::go(&pool, [&wg]() {
             walle::core::defer_t defer([&wg]() { wg.done(); });
 
             for (int i = 0; i < 16; ++i) {
