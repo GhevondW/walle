@@ -2,41 +2,35 @@
 
 #include <function2/function2.hpp>
 #include <memory>
-
-#include <stdexcept>
+#include <walle/cortex/suspend_context.hpp>
 
 namespace walle::cortex {
 
-class coroutine {
+class coroutine_t {
     struct impl;
 
-    explicit coroutine(std::shared_ptr<impl> in_impl) noexcept;
+    explicit coroutine_t(std::shared_ptr<impl> in_impl) noexcept;
 
 public:
-    struct resume_on_completed_coroutine_error_t : std::logic_error {
-        using logic_error::logic_error;
-    };
+    using flow_t = fu2::unique_function<void(suspend_context_i&)>;
 
-    struct suspend_context {
-        suspend_context() = default;
-        virtual ~suspend_context() = default;
+    static coroutine_t create(flow_t in_flow);
+    static coroutine_t create();
 
-        // can not be noexcept because of forced unwinding
-        virtual void suspend() = 0;
-    };
+    ~coroutine_t();
+    coroutine_t(const coroutine_t&) = delete;
+    coroutine_t(coroutine_t&&) noexcept;
 
-    using flow_t = fu2::unique_function<void(suspend_context&)>;
+    coroutine_t& operator=(const coroutine_t&) = delete;
+    coroutine_t& operator=(coroutine_t&&) noexcept;
 
-    static coroutine create(flow_t in_flow);
+    explicit operator bool() const noexcept;
+    bool is_valid() const noexcept;
 
-    ~coroutine();
-    coroutine(const coroutine&) = delete;
-    coroutine(coroutine&&) noexcept;
-
-    coroutine& operator=(const coroutine&) = delete;
-    coroutine& operator=(coroutine&&) noexcept = delete;
-
+    // if the coroutine is invalid the all this functions will caose a UB
+    // might throw resume_on_completed_coroutine_error_t
     void resume();
+
     [[nodiscard]] bool is_done() const noexcept;
 
 private:

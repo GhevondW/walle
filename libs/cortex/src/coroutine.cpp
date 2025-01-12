@@ -1,15 +1,17 @@
 #include "walle/cortex/coroutine.hpp"
+#include "walle/cortex/error.hpp"
 
 #include <boost/context/fiber.hpp>
 #include <cassert>
 #include <exception>
 #include <memory>
+#include <utility>
 
 namespace ctx = boost::context;
 
 namespace walle::cortex {
 
-struct fiber_suspend_context : coroutine::suspend_context {
+struct fiber_suspend_context : suspend_context_i {
     fiber_suspend_context(ctx::fiber& sink)
         : _sink(sink) {}
 
@@ -23,49 +25,71 @@ private:
     ctx::fiber& _sink;
 };
 
-struct coroutine::impl {
+struct coroutine_t::impl {
     ctx::fiber fiber {};
     std::exception_ptr error {};
     bool is_done {false};
 };
 
-coroutine::coroutine(std::shared_ptr<impl> in_impl) noexcept
+coroutine_t::coroutine_t(std::shared_ptr<impl> in_impl) noexcept
     : _impl(std::move(in_impl)) {}
 
-coroutine coroutine::create([[maybe_unused]] flow_t in_flow) {
-    auto coro_impl = std::make_shared<coroutine::impl>();
-
-    ctx::fiber fiber(
-        [weak_impl = std::weak_ptr<coroutine::impl>(coro_impl), flow = std::move(in_flow)](ctx::fiber&& sink) mutable {
-            assert(!weak_impl.expired());
-
-            fiber_suspend_context suspend_context(sink);
-            suspend_context.suspend();
-
-            try {
-                flow(suspend_context);
-            } catch (const std::exception& error) {
-                if (auto impl = weak_impl.lock(); impl) {
-                    impl->error = std::current_exception();
-                }
-            }
-
-            if (auto impl = weak_impl.lock(); impl) {
-                impl->is_done = true;
-            }
-            return std::move(sink).resume();
-        });
-
-    coro_impl->fiber = std::move(fiber).resume();
-    return coroutine(std::move(coro_impl));
+coroutine_t coroutine_t::create() {
+    return coroutine_t(nullptr);
 }
 
-coroutine::~coroutine() = default;
+coroutine_t coroutine_t::create(flow_t in_flow) {
+    auto coro_impl = std::make_shared<coroutine_t::impl>();
 
-coroutine::coroutine(coroutine&& other) noexcept
+    ctx::fiber fiber([weak_impl = std::weak_ptr<coroutine_t::impl>(coro_impl),
+                      flow = std::move(in_flow)](ctx::fiber&& sink) mutable {
+        assert(!weak_impl.expired());
+
+        fiber_suspend_context suspend_context(sink);
+        suspend_context.suspend();
+
+        try {
+            flow(suspend_context);
+        } catch (const std::exception& error) {
+            if (auto impl = weak_impl.lock(); impl) {
+                impl->error = std::current_exception();
+            }
+        }
+
+        if (auto impl = weak_impl.lock(); impl) {
+            impl->is_done = true;
+        }
+        return std::move(sink).resume();
+    });
+
+    coro_impl->fiber = std::move(fiber).resume();
+    return coroutine_t(std::move(coro_impl));
+}
+
+coroutine_t::~coroutine_t() = default;
+
+coroutine_t::coroutine_t(coroutine_t&& other) noexcept
     : _impl(std::move(other._impl)) {}
 
-void coroutine::resume() {
+coroutine_t& coroutine_t::operator=(coroutine_t&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+
+    auto tmp = std::make_shared<coroutine_t::impl>();
+    std::swap(tmp, _impl);
+    return *this;
+}
+
+coroutine_t::operator bool() const noexcept {
+    return is_valid();
+}
+
+bool coroutine_t::is_valid() const noexcept {
+    return static_cast<bool>(_impl);
+}
+
+void coroutine_t::resume() {
     assert(_impl);
     if (is_done()) {
         throw resume_on_completed_coroutine_error_t {"resume on finished coroutine"};
@@ -78,7 +102,7 @@ void coroutine::resume() {
     }
 }
 
-[[nodiscard]] bool coroutine::is_done() const noexcept {
+[[nodiscard]] bool coroutine_t::is_done() const noexcept {
     assert(_impl);
     return _impl->is_done;
 }
