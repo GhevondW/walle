@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <walle/cortex/coroutine.hpp>
+#include <walle/cortex/error.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -36,7 +37,7 @@ struct TreeNode {
 class TreeIterator {
 public:
     explicit TreeIterator(TreeNodePtr root)
-        : walker_(walle::cortex::coroutine::create([this, root](auto& self) { TreeWalk(root, self); })) {}
+        : walker_(walle::cortex::coroutine_t::create([this, root](auto& self) { TreeWalk(root, self); })) {}
 
     bool TryNext() {
         walker_.resume();
@@ -62,7 +63,7 @@ private:
     }
 
 private:
-    walle::cortex::coroutine walker_;
+    walle::cortex::coroutine_t walker_;
     std::string_view data_;
 };
 
@@ -71,7 +72,7 @@ private:
 TEST(cortex_test_coroutine, just_works) {
     int global = 1;
 
-    auto handle = walle::cortex::coroutine::create([&global](auto& ctx) {
+    auto handle = walle::cortex::coroutine_t::create([&global](auto& ctx) {
         std::cout << "coro -> #1" << std::endl;
         EXPECT_EQ(global++, 1);
         ctx.suspend();
@@ -81,6 +82,7 @@ TEST(cortex_test_coroutine, just_works) {
         std::cout << "coro -> #5" << std::endl;
         EXPECT_EQ(global++, 5);
     });
+    EXPECT_TRUE(handle.is_valid());
 
     handle.resume();
     std::cout << "main -> #2" << std::endl;
@@ -96,21 +98,28 @@ TEST(cortex_test_coroutine, just_works) {
     EXPECT_TRUE(handle.is_done());
 }
 
+TEST(cortex_test_coroutine, create_invalid) {
+    auto coroutine = walle::cortex::coroutine_t::create();
+    EXPECT_FALSE(coroutine.is_valid());
+    EXPECT_FALSE(static_cast<bool>(coroutine.is_valid()));
+}
+
 TEST(cortex_test_coroutine, resume_on_finished_coroutine) {
     int global = 0;
 
-    auto handle = walle::cortex::coroutine::create([&global](auto& ctx) {
+    auto handle = walle::cortex::coroutine_t::create([&global](auto& ctx) {
         std::cout << "coro -> #1" << std::endl;
         EXPECT_EQ(global, 1);
         ++global;
     });
+    EXPECT_TRUE(handle.is_valid());
 
     EXPECT_EQ(global, 0);
     ++global;
     handle.resume();
 
     EXPECT_EQ(global, 2);
-    EXPECT_THROW(handle.resume(), walle::cortex::coroutine::resume_on_completed_coroutine_error_t);
+    EXPECT_THROW(handle.resume(), walle::cortex::resume_on_completed_coroutine_error_t);
 }
 
 TEST(cortex_test_coroutine, exceptions) {
@@ -120,7 +129,7 @@ TEST(cortex_test_coroutine, exceptions) {
         using runtime_error::runtime_error;
     };
 
-    auto handle = walle::cortex::coroutine::create([&global](auto& ctx) {
+    auto handle = walle::cortex::coroutine_t::create([&global](auto& ctx) {
         std::cout << "coro -> #1" << std::endl;
         EXPECT_EQ(++global, 1);
         ctx.suspend();
@@ -157,7 +166,7 @@ TEST(cortex_test_coroutine, destroy_unfinished_coroutine) {
     };
 
     {
-        auto handle = walle::cortex::coroutine::create([&global](auto& ctx) {
+        auto handle = walle::cortex::coroutine_t::create([&global](auto& ctx) {
             std::cout << "coro -> #2" << std::endl;
             test_struct ts(global);
             EXPECT_EQ(global, 1);
@@ -182,7 +191,7 @@ TEST(cortex_test_coroutine, destroy_unfinished_coroutine) {
 TEST(cortex_test_coroutine, nested) {
     int counter = 0;
 
-    auto execution_one = walle::cortex::coroutine::create([&counter](auto& suspender) {
+    auto execution_one = walle::cortex::coroutine_t::create([&counter](auto& suspender) {
         EXPECT_EQ(++counter, 2);
         std::cout << "Step 2" << '\n';
         suspender.suspend();
@@ -191,7 +200,7 @@ TEST(cortex_test_coroutine, nested) {
         std::cout << "Step 4" << '\n';
     });
 
-    auto execution_two = walle::cortex::coroutine::create([&execution_one, &counter](auto& suspender) {
+    auto execution_two = walle::cortex::coroutine_t::create([&execution_one, &counter](auto& suspender) {
         EXPECT_EQ(++counter, 1);
         std::cout << "Step 1" << '\n';
         execution_one.resume();
@@ -200,7 +209,7 @@ TEST(cortex_test_coroutine, nested) {
         std::cout << "Step 3" << '\n';
         execution_one.resume();
 
-        auto nested = walle::cortex::coroutine::create([&counter](auto& suspender) {
+        auto nested = walle::cortex::coroutine_t::create([&counter](auto& suspender) {
             EXPECT_EQ(++counter, 5);
             std::cout << "Step 5" << '\n';
             suspender.suspend();
@@ -224,7 +233,7 @@ TEST(cortex_test_coroutine, nested) {
 TEST(cortex_test_coroutine, suspend) {
     int step = 0;
 
-    auto coro = walle::cortex::coroutine::create([&step](auto& self) {
+    auto coro = walle::cortex::coroutine_t::create([&step](auto& self) {
         ++step;
         self.suspend();
         ++step;
@@ -247,7 +256,7 @@ TEST(cortex_test_coroutine, suspend) {
 TEST(cortex_test_coroutine, suspend_for_loop) {
     const size_t kIters = 128;
 
-    auto coro = walle::cortex::coroutine::create([](auto& self) {
+    auto coro = walle::cortex::coroutine_t::create([](auto& self) {
         for (size_t i = 0; i < kIters; ++i) {
             self.suspend();
         }
@@ -267,7 +276,7 @@ TEST(cortex_test_coroutine, suspend_for_loop) {
 TEST(cortex_test_coroutine, interleaving) {
     int step = 0;
 
-    auto a = walle::cortex::coroutine::create([&step](auto& self) {
+    auto a = walle::cortex::coroutine_t::create([&step](auto& self) {
         ASSERT_EQ(step, 0);
         step = 1;
         self.suspend();
@@ -275,7 +284,7 @@ TEST(cortex_test_coroutine, interleaving) {
         step = 3;
     });
 
-    auto b = walle::cortex::coroutine::create([&step](auto& self) {
+    auto b = walle::cortex::coroutine_t::create([&step](auto& self) {
         ASSERT_EQ(step, 1);
         step = 2;
         self.suspend();
@@ -308,7 +317,7 @@ struct Threads {
 TEST(cortex_test_coroutine, threads) {
     size_t steps = 0;
 
-    auto coro = walle::cortex::coroutine::create([&steps](auto& self) {
+    auto coro = walle::cortex::coroutine_t::create([&steps](auto& self) {
         ++steps;
         self.suspend();
         ++steps;
@@ -352,8 +361,8 @@ TEST(cortex_test_coroutine, pipeline) {
 
     size_t steps = 0;
 
-    auto outer = walle::cortex::coroutine::create([&](auto& self) {
-        auto inner = walle::cortex::coroutine::create([&steps](auto& self) {
+    auto outer = walle::cortex::coroutine_t::create([&](auto& self) {
+        auto inner = walle::cortex::coroutine_t::create([&steps](auto& self) {
             for (size_t i = 0; i < kSteps; ++i) {
                 ++steps;
                 self.suspend();

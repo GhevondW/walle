@@ -1,5 +1,6 @@
 # TODO add headers here too
 add_library(walle_cortex 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/coroutine_base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/coroutine.cpp
 )
 
