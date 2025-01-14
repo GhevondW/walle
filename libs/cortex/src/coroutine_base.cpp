@@ -4,8 +4,11 @@
 
 namespace walle::cortex {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
 coroutine_base_i::coroutine_base_i()
     : _coroutine(coroutine_t::create([this](auto& self) { run_flow(self); })) {}
+#pragma GCC diagnostic pop
 
 coroutine_base_i::coroutine_base_i(coroutine_base_i&& other) noexcept
     : _coroutine(std::move(other._coroutine)) {}
