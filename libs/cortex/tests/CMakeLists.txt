@@ -25,3 +25,4 @@ endfunction()
 
 walle_cortex_add_gtest(test_coroutine_base test_coroutine_base.cpp)
 walle_cortex_add_gtest(test_coroutine test_coroutine.cpp)
+walle_cortex_add_gtest(test_generator test_generator.cpp)
