@@ -77,6 +77,7 @@ coroutine_t& coroutine_t::operator=(coroutine_t&& other) noexcept {
     }
 
     auto tmp = std::make_shared<coroutine_t::impl>();
+    std::swap(tmp, other._impl);
     std::swap(tmp, _impl);
     return *this;
 }
@@ -90,7 +91,7 @@ bool coroutine_t::is_valid() const noexcept {
 }
 
 void coroutine_t::resume() {
-    assert(_impl);
+    assert(is_valid());
     if (is_done()) {
         throw resume_on_completed_coroutine_error_t {"resume on finished coroutine"};
     }
@@ -103,7 +104,7 @@ void coroutine_t::resume() {
 }
 
 [[nodiscard]] bool coroutine_t::is_done() const noexcept {
-    assert(_impl);
+    assert(is_valid());
     return _impl->is_done;
 }
 

@@ -14,8 +14,8 @@ class coroutine_t {
 public:
     using flow_t = fu2::unique_function<void(suspend_context_i&)>;
 
-    static coroutine_t create(flow_t in_flow);
     static coroutine_t create();
+    static coroutine_t create(flow_t in_flow);
 
     ~coroutine_t();
     coroutine_t(const coroutine_t&) = delete;
