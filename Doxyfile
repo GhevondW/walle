@@ -1,0 +1,17 @@
+# Doxyfile for walle project
+
+# Project information
+PROJECT_NAME           = "walle"
+PROJECT_NUMBER         = 0.0.1
+
+# Output directory
+OUTPUT_DIRECTORY       = ./doc
+
+# This makes the background white or light-colored
+HTML_COLORSTYLE = light
+
+# Input sources
+INPUT                  = ./libs
+
+# Recurse into subdirectories
+RECURSIVE              = YES

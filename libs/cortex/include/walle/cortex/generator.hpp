@@ -14,8 +14,34 @@
 
 namespace walle::cortex {
 
+/**
+ * @brief A generator class that produces values lazily, suspending and resuming execution.
+ *
+ * This class provides a mechanism for generating a sequence of values lazily. It uses
+ * coroutines and a `yield_context` to suspend execution and yield values. The `generator_t`
+ * can be used to iterate over a sequence of values without generating them all upfront,
+ * reducing memory usage.
+ *
+ * @tparam ResultType The type of values yielded by the generator.
+ *
+ * ### Example usage
+ * @code
+ * // Example usage of generator_t to generate values lazily
+ * generator_t<int>::job_t job = [](yield_context& yield) {
+ *     for (int i = 0; i < 5; ++i) {
+ *         yield.yield(i);  // Yielding values from 0 to 4
+ *     }
+ * };
+ *
+ * generator_t<int> gen(job);
+ * while (gen.has_next()) {
+ *     int value = gen.next();
+ *     std::cout << value << std::endl;  // Output: 0, 1, 2, 3, 4
+ * }
+ * @endcode
+ */
 template <typename ResultType>
-class generator_t {
+class generator_t final {
     static_assert(!std::is_reference_v<ResultType>, "ResultType must not be a reference");
     static_assert(!std::is_const_v<std::remove_reference_t<ResultType>>, "ResultType must not be const-qualified");
     static_assert(!std::is_volatile_v<std::remove_reference_t<ResultType>>,
@@ -89,20 +115,59 @@ class generator_t {
     };
 
 public:
+    /**
+     * @brief Type alias for the job function that defines the generator's behavior.
+     *
+     * The `job_t` type is a unique function that accepts a `yield_context` reference.
+     * The job function defines the generator's flow and produces values when `yield` is called.
+     */
     using job_t = fu2::unique_function<void(yield_context&)>;
 
+    /**
+     * @brief Constructs a generator with the specified job function.
+     *
+     * This constructor creates a generator by taking a job function that defines the flow
+     * of the generator. The job function is invoked when the generator is resumed.
+     *
+     * @param in_job The job function that defines the generator's flow and produces values.
+     */
     generator_t(job_t in_job);
 
+    /**
+     * @brief Checks if the generator has more values to yield.
+     *
+     * This function checks whether the generator has more values to yield by calling
+     * the internal `fill` function and verifying if the generator's state has a value.
+     *
+     * @return `true` if the generator has more values to yield, `false` otherwise.
+     */
     bool has_next();
 
+    /**
+     * @brief Gets the next value from the generator.
+     *
+     * This function retrieves the next value produced by the generator. It asserts that
+     * the generator has a value available and returns the value, resetting the generator's state.
+     *
+     * @return The next value produced by the generator.
+     *
+     * @throws std::logic_error If the generator state is invalid or the value is not available.
+     */
     ResultType next();
 
 private:
+    /**
+     * @brief Fills the generator with the next value.
+     *
+     * This function resumes the coroutine if the generator is not done and does not
+     * have a value. It ensures that the generator is filled with the next value before
+     * it can be accessed.
+     */
     void fill();
 
 private:
-    std::shared_ptr<shared_state> _state;
-    coroutine_t _coroutine;
+    std::shared_ptr<shared_state> _state; ///< The shared state of the generator.
+    coroutine_t _coroutine; ///< The coroutine responsible for executing the generator's flow.
 };
 
 template <typename ResultType>
