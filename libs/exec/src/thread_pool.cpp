@@ -2,6 +2,8 @@
 
 #include <walle/core/optional.hpp>
 
+#include "walle/exec/current_executor.hpp"
+
 namespace walle::exec {
 
 thread_pool::thread_pool(std::size_t workers_count)
@@ -42,6 +44,8 @@ void thread_pool::init() {
 }
 
 void thread_pool::loop() {
+    const current_executor::scope_guard scope_guard(this);
+
     for (;;) {
         auto task = _tasks.wait_and_pop();
         if (!task.has_value()) {

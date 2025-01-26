@@ -1,3 +1,4 @@
+#include "walle/exec/current_executor.hpp"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -8,37 +9,29 @@
 
 using namespace std::chrono_literals;
 
-// Helper task to track execution count
 void increment_counter(std::atomic<int>& counter) {
-    std::this_thread::sleep_for(50ms); // Simulate work
+    std::this_thread::sleep_for(50ms);
     ++counter;
 }
 
 class ThreadPoolTest : public ::testing::Test {
 protected:
-    void SetUp() override {
-        // This can be used to set up common preconditions for all tests
-    }
+    void SetUp() override {}
 
-    void TearDown() override {
-        // This can be used to clean up after each test
-    }
+    void TearDown() override {}
 };
 
-// --- Constructor Tests ---
-TEST_F(ThreadPoolTest, Constructor_ValidWorkersCount) {
+TEST_F(ThreadPoolTest, constructor_valid_workers_count) {
     walle::exec::thread_pool pool(4);
-    ASSERT_EQ(pool.workers_count(), 4); // Check worker thread count
+    ASSERT_EQ(pool.workers_count(), 4);
     pool.stop();
 }
 
-TEST_F(ThreadPoolTest, Constructor_InvalidWorkersCount) {
-    // This test assumes that an invalid worker count (0) might throw an exception or handle gracefully.
+TEST_F(ThreadPoolTest, constructor_invalid_workers_count) {
     EXPECT_THROW(walle::exec::thread_pool pool(0), std::invalid_argument);
 }
 
-// --- Task Submission Tests ---
-TEST_F(ThreadPoolTest, Submit_SingleTask) {
+TEST_F(ThreadPoolTest, submit_single_task) {
     walle::exec::thread_pool pool(2);
     std::atomic<int> counter = 0;
 
@@ -49,7 +42,25 @@ TEST_F(ThreadPoolTest, Submit_SingleTask) {
     pool.stop();
 }
 
-TEST_F(ThreadPoolTest, Submit_MultipleTasks) {
+TEST_F(ThreadPoolTest, submit_task_current_executor) {
+    walle::exec::thread_pool pool(2);
+    std::atomic<int> counter = 0;
+
+    pool.submit([&counter] {
+        increment_counter(counter);
+        ASSERT_TRUE(walle::exec::current_executor::get() != nullptr);
+        walle::exec::current_executor::get()->submit([&counter]() {
+            increment_counter(counter);
+            walle::exec::current_executor::get()->submit([&counter]() { increment_counter(counter); });
+        });
+    });
+    pool.wait_idle();
+
+    ASSERT_EQ(counter.load(), 3);
+    pool.stop();
+}
+
+TEST_F(ThreadPoolTest, submit_multiple_tasks) {
     walle::exec::thread_pool pool(3);
     std::atomic<int> counter = 0;
 
@@ -58,11 +69,11 @@ TEST_F(ThreadPoolTest, Submit_MultipleTasks) {
     }
     pool.wait_idle();
 
-    ASSERT_EQ(counter.load(), 123); // All tasks should be completed
+    ASSERT_EQ(counter.load(), 123);
     pool.stop();
 }
 
-TEST_F(ThreadPoolTest, Submit_ConcurrentExecution) {
+TEST_F(ThreadPoolTest, submit_concurrent_execution) {
     walle::exec::thread_pool pool(4);
     std::atomic<int> counter = 0;
     std::mutex mtx;
@@ -80,21 +91,20 @@ TEST_F(ThreadPoolTest, Submit_ConcurrentExecution) {
     pool.wait_idle();
 
     ASSERT_EQ(counter.load(), 10);
-    ASSERT_GT(thread_ids.size(), 1); // Multiple threads should have been used
+    ASSERT_GT(thread_ids.size(), 1);
     std::sort(thread_ids.begin(), thread_ids.end());
     thread_ids.erase(std::unique(thread_ids.begin(), thread_ids.end()), thread_ids.end());
-    ASSERT_GT(thread_ids.size(), 1); // Check that multiple distinct threads ran the tasks
+    ASSERT_GT(thread_ids.size(), 1);
     pool.stop();
 }
 
-// --- Wait Idle Tests ---
-TEST_F(ThreadPoolTest, WaitIdle_BlocksUntilTasksComplete) {
+TEST_F(ThreadPoolTest, wait_idle_blocks_until_tasks_complete) {
     walle::exec::thread_pool pool(2);
     std::atomic<int> counter = 0;
 
     for (int i = 0; i < 5; ++i) {
         pool.submit([&counter] {
-            std::this_thread::sleep_for(100ms); // Simulate slow task
+            std::this_thread::sleep_for(100ms);
             increment_counter(counter);
         });
     }
@@ -124,8 +134,7 @@ TEST_F(ThreadPoolTest, WaitIdle_BlocksUntilTasksComplete) {
 //     ASSERT_EQ(counter.load(), 1);
 // }
 
-// --- Thread Safety Tests ---
-TEST_F(ThreadPoolTest, Submit_FromMultipleThreads) {
+TEST_F(ThreadPoolTest, submit_from_multiple_threads) {
     walle::exec::thread_pool pool(4);
     std::atomic<int> counter = 0;
 
@@ -143,6 +152,6 @@ TEST_F(ThreadPoolTest, Submit_FromMultipleThreads) {
     t3.join();
 
     pool.wait_idle();
-    ASSERT_EQ(counter.load(), 15); // Each thread submitted 5 tasks
+    ASSERT_EQ(counter.load(), 15);
     pool.stop();
 }
