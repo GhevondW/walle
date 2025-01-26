@@ -1,4 +1,5 @@
 #include "walle/exec/manual_executor.hpp"
+#include "walle/exec/current_executor.hpp"
 
 namespace walle::exec {
 
@@ -15,6 +16,8 @@ void manual_executor::submit(task_t task) {
 }
 
 void manual_executor::run_one() {
+    const current_executor::scope_guard scope(this);
+
     if (_tasks.empty()) {
         throw empty_executor {"the manual_executor is empty"};
     }
@@ -26,6 +29,8 @@ void manual_executor::run_one() {
 }
 
 void manual_executor::run_all() {
+    const current_executor::scope_guard scope(this);
+
     while (tasks_count() > 0) {
         run_one();
     }
