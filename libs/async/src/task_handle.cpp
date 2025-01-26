@@ -7,7 +7,9 @@
 namespace walle::async {
 
 task_handle::task_handle(boost::intrusive_ptr<task_context> impl)
-    : _impl(std::move(impl)) {}
+    : _impl(std::move(impl)) {
+    start();
+}
 
 task_handle::task_handle(task_handle&& other) noexcept
     : _impl() {
@@ -67,5 +69,15 @@ void task_handle::blocking_join() {
 void task_handle::cancel() {}
 
 void task_handle::blocking_cancel() {}
+
+task_status_e task_handle::status() const noexcept {
+    assert(_impl);
+    return _impl->status();
+}
+
+void task_handle::start() {
+    assert(_impl);
+    _impl->schedule();
+}
 
 } // namespace walle::async

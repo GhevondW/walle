@@ -1,6 +1,8 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <chrono>
 #include <gtest/gtest.h>
 
+#include <vector>
 #include <walle/async/go.hpp>
 #include <walle/async/task_handle.hpp>
 #include <walle/async/this_task.hpp>
@@ -10,12 +12,25 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+using namespace walle;
+
 TEST(async_test_fiber, api_just_works) {
-    walle::exec::thread_pool pool(4);
-    auto task = walle::async::go(pool, []() { std::cout << "fiber : start" << std::endl; });
+    exec::thread_pool pool(2);
+    auto task1 = async::go(pool, []() {
+        std::cout << "fiber #1: start" << std::endl;
+        // std::vector<async::task_handle> tasks;
+        // for(int i = 2; i < 10; ++i) {
+        //     tasks.push_back(async::go([i](){
+        //         std::cout << "fiber #"<< i << " : start" << std::endl;
+        //     }));
+        // }
 
-    task.blocking_join();
+        // for(auto& task : tasks) {
+        //     task.join();
+        // }
+    });
 
+    task1.blocking_join();
     pool.stop();
 }
 

@@ -4,6 +4,7 @@
 
 #include <walle/async/task_function.hpp>
 #include <walle/async/task_id.hpp>
+#include <walle/async/task_status.hpp>
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -45,6 +46,11 @@ public:
     void cancel();
 
     void blocking_cancel();
+
+    task_status_e status() const noexcept;
+
+private:
+    void start();
 
 private:
     boost::intrusive_ptr<task_context> _impl;
