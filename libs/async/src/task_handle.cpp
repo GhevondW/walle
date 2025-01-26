@@ -6,8 +6,8 @@
 
 namespace walle::async {
 
-task_handle::task_handle()
-    : _impl() {}
+task_handle::task_handle(boost::intrusive_ptr<task_context> impl)
+    : _impl(std::move(impl)) {}
 
 task_handle::task_handle(task_handle&& other) noexcept
     : _impl() {

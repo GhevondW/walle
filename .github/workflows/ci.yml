@@ -175,7 +175,7 @@ jobs:
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         # gcovr -j ${{env.nproc}} --delete --root ../ --print-summary --xml-pretty --xml coverage.xml . --gcov-executable '${{ matrix.gcov_executable }}'
         run: |
-          ctest -C ${{matrix.build_type}} --test-dir libs/core/ --verbose && ctest -C ${{matrix.build_type}} --test-dir libs/cortex/ --verbose && ctest -C ${{matrix.build_type}} --test-dir libs/exec/ --verbose
+          ctest -C ${{matrix.build_type}} --test-dir libs/core/ --verbose && ctest -C ${{matrix.build_type}} --test-dir libs/cortex/ --verbose && ctest -C ${{matrix.build_type}} --test-dir libs/exec/ --verbose && ctest -C ${{matrix.build_type}} --test-dir libs/async/ --verbose
 
       # - name: Windows - Test and coverage
       #   if: runner.os == 'Windows'

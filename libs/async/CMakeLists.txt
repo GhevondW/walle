@@ -1,5 +1,6 @@
 # TODO add headers here too
 add_library(walle_async
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/blocking_parking_lot.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/go.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/task_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/task_handle.cpp
@@ -12,6 +13,7 @@ add_library(walle::async ALIAS walle_async)
 target_link_libraries(walle_async PRIVATE walle_options walle_warnings)
 target_link_system_libraries(walle_async PUBLIC walle::cortex walle::exec function2::function2 Boost::smart_ptr)
 target_include_directories(walle_async ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+# TODO : make this private, now used for testing
 target_include_directories(walle_async ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
 target_compile_features(walle_async PUBLIC cxx_std_20)

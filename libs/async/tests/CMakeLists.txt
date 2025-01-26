@@ -24,4 +24,5 @@ function(walle_async_add_gtest test_name test_source)
   add_test(NAME ${test_name} COMMAND ${test_name})
 endfunction()
 
+walle_async_add_gtest(test_blocking_parking_lot test_blocking_parking_lot.cpp)
 walle_async_add_gtest(test_task test_task.cpp)
