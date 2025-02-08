@@ -37,7 +37,7 @@ private:
 } // namespace detail
 
 template <typename ResultValue = void>
-class sync_task {
+class sync_task final {
 private:
     struct sync_task_promise_base {
     public:
@@ -75,7 +75,7 @@ private:
     };
 
     template <typename PResultValue>
-    struct sync_task_promise : public sync_task_promise_base {
+    struct sync_task_promise final : public sync_task_promise_base {
         using coroutine_handle_t = std::coroutine_handle<sync_task_promise<ResultValue>>;
 
     public:
@@ -150,11 +150,11 @@ public:
         }
     }
 
-    bool is_valid() const noexcept {
+    [[nodiscard]] bool is_valid() const noexcept {
         return static_cast<bool>(_coro_handle);
     }
 
-    bool is_done() const noexcept {
+    [[nodiscard]] bool is_done() const noexcept {
         return _coro_handle.done();
     }
 
@@ -167,13 +167,13 @@ public:
     }
 
     // Returns the result or rethrows an uncaught exception
-    ResultValue detach() && {
+    [[nodiscard]] ResultValue detach() && {
         if (!_coro_handle) {
-            throw std::logic_error {"detach() called on an invalid task"};
+            throw std::logic_error {"Cannot detach: invalid task."};
         }
 
         if (!_coro_handle.done()) {
-            throw std::logic_error {"detach() called on an unfinished task"};
+            throw std::logic_error {"Cannot detach: coroutine is not completed."};
         }
 
         sync_task self;
@@ -188,7 +188,7 @@ public:
             return;
         } else {
             auto result_opt = promise.get_result();
-            assert(result_opt.has_value());
+            assert(result_opt.has_value() && "sync_task promise must contain a result.");
             return std::move(result_opt).value();
         }
     }
@@ -196,11 +196,11 @@ public:
 private:
     void resume() {
         if (!_coro_handle) {
-            throw std::logic_error {"resume() called on an invalid coroutine"};
+            throw std::logic_error {"Cannot resume: invalid coroutine handle."};
         }
 
         if (_coro_handle.done()) {
-            throw std::logic_error {"resume() called on a finished coroutine"};
+            throw std::logic_error {"Cannot resume: coroutine has already finished execution."};
         }
 
         _coro_handle.resume();
