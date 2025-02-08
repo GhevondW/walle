@@ -1,12 +1,13 @@
 #include <gtest/gtest.h>
 #include <thread>
-#define SINGLE_SHOT_EVENT_USE_ATOMICS
+
+#include <walle/core/atomic_single_shot_event.hpp>
 #include <walle/core/single_shot_event.hpp>
 
 namespace walle::core {
 
 TEST(single_shot_event_test, wait_blocks_wntil_set) {
-    single_shot_event_t event;
+    atomic_single_shot_event_t event;
     std::atomic<bool> event_triggered = false;
 
     std::thread t([&]() {
@@ -23,7 +24,7 @@ TEST(single_shot_event_test, wait_blocks_wntil_set) {
 }
 
 TEST(single_shot_event_test, set_unblocks_wait) {
-    single_shot_event_t event;
+    atomic_single_shot_event_t event;
     event.set();
 
     std::atomic<bool> event_triggered = false;
@@ -38,7 +39,7 @@ TEST(single_shot_event_test, set_unblocks_wait) {
 }
 
 TEST(single_shot_event_test, multiple_waits_unblocked_after_set) {
-    single_shot_event_t event;
+    atomic_single_shot_event_t event;
     std::atomic<int> count = 0;
 
     std::thread t1([&]() {
@@ -60,7 +61,7 @@ TEST(single_shot_event_test, multiple_waits_unblocked_after_set) {
 }
 
 TEST(single_shot_event_test, initial_state_true_does_not_block) {
-    single_shot_event_t event(true);
+    atomic_single_shot_event_t event(true);
     std::atomic<bool> event_triggered = false;
 
     std::thread t([&]() {
@@ -73,7 +74,7 @@ TEST(single_shot_event_test, initial_state_true_does_not_block) {
 }
 
 TEST(single_shot_event_test, initial_state_false_blocks_until_set) {
-    single_shot_event_t event(false);
+    atomic_single_shot_event_t event(false);
     std::atomic<bool> event_triggered = false;
 
     std::thread t([&]() {

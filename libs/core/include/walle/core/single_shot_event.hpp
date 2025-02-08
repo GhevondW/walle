@@ -2,22 +2,27 @@
 
 #ifdef WALLE_CORE_SINGLE_SHOT_EVENT_USE_ATOMICS
 #include <atomic>
+#define WALLE_CORE_SINGLE_SHOT_EVENT_NOEXCEPT noexcept
+#define WALLE_CORE_SINGLE_SHOT_EVENT_CLASS_NAME atomic_single_shot_event_t
 #else
 #include <condition_variable>
 #include <mutex>
+#define WALLE_CORE_SINGLE_SHOT_EVENT_NOEXCEPT
+#define WALLE_CORE_SINGLE_SHOT_EVENT_CLASS_NAME single_shot_event_t
 #endif
 
 namespace walle::core {
 
-class single_shot_event_t {
+// TODO : think about memory order, right now this is ok
+class WALLE_CORE_SINGLE_SHOT_EVENT_CLASS_NAME {
 public:
-    explicit single_shot_event_t(bool initial_state = false)
+    explicit WALLE_CORE_SINGLE_SHOT_EVENT_CLASS_NAME(bool initial_state = false) noexcept
         : _event(initial_state) {}
-    ~single_shot_event_t() = default;
+    ~WALLE_CORE_SINGLE_SHOT_EVENT_CLASS_NAME() = default;
 
-    void wait() {
+    void wait() WALLE_CORE_SINGLE_SHOT_EVENT_NOEXCEPT {
 #ifdef WALLE_CORE_SINGLE_SHOT_EVENT_USE_ATOMICS
-        _event.wait(false, std::memory_order_relaxed);
+        _event.wait(false);
 #else
         std::unique_lock lock(_mtx);
         while (!_event) {
@@ -27,9 +32,9 @@ public:
     }
 
     // `set` must be called before this object goes out of scope
-    void set() {
+    void set() WALLE_CORE_SINGLE_SHOT_EVENT_NOEXCEPT {
 #ifdef WALLE_CORE_SINGLE_SHOT_EVENT_USE_ATOMICS
-        _event.store(true, std::memory_order_relaxed);
+        _event.store(true);
         _event.notify_all();
 #else
         {

@@ -5,19 +5,20 @@
 #include <walle/asymtx/sync_task.hpp>
 
 TEST(async_test_fiber, api_just_works) {
+    walle::core::atomic_single_shot_event_t event;
+
     auto task = []() -> walle::asymtx::sync_task {
-        std::cout << "b" << std::endl;
-        co_await std::suspend_always {};
-        std::cout << "d" << std::endl;
-        co_await std::suspend_always {};
-        std::cout << "f" << std::endl;
+        std::cout << "Hello World" << std::endl;
         co_return;
     }();
 
-    std::cout << "a" << std::endl;
-    task.resume();
-    std::cout << "c" << std::endl;
-    task.resume();
-    std::cout << "e" << std::endl;
-    task.resume();
+    task.start(&event);
+    event.wait();
+
+    // std::cout << "a" << std::endl;
+    // task.resume();
+    // std::cout << "c" << std::endl;
+    // task.resume();
+    // std::cout << "e" << std::endl;
+    // task.resume();
 }
