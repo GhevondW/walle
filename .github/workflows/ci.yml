@@ -59,7 +59,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          for dir in libs/core libs/cortex libs/exec libs/asymtx; do
+          for dir in build/libs/core build/libs/cortex build/libs/exec build/libs/asymtx; do
             echo "Running tests in $dir..."
             if [ -d "$dir" ]; then
               ctest -C ${{ matrix.build_type }} --test-dir $dir --verbose || exit 1
