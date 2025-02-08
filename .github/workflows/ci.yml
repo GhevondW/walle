@@ -14,7 +14,7 @@ env:
 
 jobs:
   Build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -25,9 +25,15 @@ jobs:
         build_type:
           - Release
           - Debug
-    
+
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install newer libstdc++ from GCC 11
+        run: |
+          sudo apt update
+          sudo apt install -y g++-11
+          echo "CXXFLAGS=-stdlib=libstdc++" >> $GITHUB_ENV
 
       - name: Setup Cpp
         uses: aminya/setup-cpp@v1
@@ -38,10 +44,15 @@ jobs:
           ccache: true
           clangtidy: ${{ env.CLANG_TIDY_VERSION }}
 
+      - name: Check Compiler Versions
+        run: |
+          clang++ --version
+          g++ --version
+
       - name: Configure CMake
         run: |
-          cmake -S . -B ./build -G "${{matrix.generator}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+          cmake -S . -B ./build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
         run: |
-          cmake --build ./build --config ${{matrix.build_type}}
+          cmake --build ./build --config ${{ matrix.build_type }}
