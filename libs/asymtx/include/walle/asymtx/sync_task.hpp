@@ -43,7 +43,7 @@ private:
     public:
         sync_task_promise_base() noexcept
             : _event(nullptr)
-            , _error(nullptr) {}
+            , _exception(nullptr) {}
 
         std::suspend_always initial_suspend() noexcept {
             return {};
@@ -54,24 +54,24 @@ private:
         }
 
         void unhandled_exception() noexcept {
-            _error = std::current_exception();
+            _exception = std::current_exception();
         }
 
         void set_event(core::atomic_single_shot_event_t* event) noexcept {
             _event = event;
         }
 
-        bool has_error() const noexcept {
-            return _error != nullptr;
+        bool has_exception() const noexcept {
+            return _exception != nullptr;
         }
 
-        std::exception_ptr error() const noexcept {
-            return _error;
+        std::exception_ptr exception() const noexcept {
+            return _exception;
         }
 
     private:
         core::atomic_single_shot_event_t* _event = nullptr;
-        std::exception_ptr _error = nullptr;
+        std::exception_ptr _exception = nullptr;
     };
 
     template <typename PResultValue>
@@ -160,28 +160,28 @@ public:
 
     void start(core::atomic_single_shot_event_t* event) {
         if (event == nullptr) {
-            throw std::invalid_argument {"input event is null"};
+            throw std::invalid_argument {"Event argument cannot be null"};
         }
         _coro_handle.promise().set_event(event);
         resume();
     }
 
-    // returns the result, or retrows the uncought error
+    // Returns the result or rethrows an uncaught exception
     ResultValue detach() && {
         if (!_coro_handle) {
-            throw std::logic_error {"detach on invalid task"};
+            throw std::logic_error {"detach() called on an invalid task"};
         }
 
         if (!_coro_handle.done()) {
-            throw std::logic_error {"detach on not finished task"};
+            throw std::logic_error {"detach() called on an unfinished task"};
         }
 
         sync_task self;
         std::swap(*this, self);
 
         auto& promise = self.promise();
-        if (promise.has_error()) {
-            std::rethrow_exception(promise.error());
+        if (promise.has_exception()) {
+            std::rethrow_exception(promise.exception());
         }
 
         if constexpr (std::is_same_v<ResultValue, void>) {
@@ -196,11 +196,11 @@ public:
 private:
     void resume() {
         if (!_coro_handle) {
-            throw std::logic_error {"resume on invalid coroutine"};
+            throw std::logic_error {"resume() called on an invalid coroutine"};
         }
 
         if (_coro_handle.done()) {
-            throw std::logic_error {"resume on finished coroutine"};
+            throw std::logic_error {"resume() called on a finished coroutine"};
         }
 
         _coro_handle.resume();
