@@ -56,3 +56,14 @@ jobs:
       - name: Build
         run: |
           cmake --build ./build --config ${{ matrix.build_type }}
+
+      - name: Run Tests
+        run: |
+          for dir in libs/core libs/cortex libs/exec libs/asymtx; do
+            echo "Running tests in $dir..."
+            if [ -d "$dir" ]; then
+              ctest -C ${{ matrix.build_type }} --test-dir $dir --verbose || exit 1
+            else
+              echo "Warning: $dir not found, skipping..."
+            fi
+          done
