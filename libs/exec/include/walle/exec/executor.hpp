@@ -11,6 +11,8 @@ struct executor_i {
     virtual ~executor_i() = default;
 
     virtual void submit(task_t task) = 0;
+    // maybe i need this
+    // virtual void stop() = 0;
 };
 
 } // namespace walle::exec

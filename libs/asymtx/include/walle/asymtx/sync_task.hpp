@@ -14,8 +14,8 @@ namespace walle::asymtx {
 
 namespace detail {
 
-struct sync_task_final_awaitable {
-    explicit sync_task_final_awaitable(core::atomic_single_shot_event_t* event) noexcept
+struct sync_task_final_awaitable_t {
+    explicit sync_task_final_awaitable_t(core::atomic_single_shot_event_t* event) noexcept
         : _event(event) {
         assert(_event);
     }
@@ -37,11 +37,11 @@ private:
 } // namespace detail
 
 template <typename ResultValue = void>
-class sync_task final {
+class sync_task_t final {
 private:
-    struct sync_task_promise_base {
+    struct sync_task_promise_base_t {
     public:
-        sync_task_promise_base() noexcept
+        sync_task_promise_base_t() noexcept
             : _event(nullptr)
             , _exception(nullptr) {}
 
@@ -50,7 +50,7 @@ private:
         }
 
         auto final_suspend() noexcept {
-            return detail::sync_task_final_awaitable {_event};
+            return detail::sync_task_final_awaitable_t {_event};
         }
 
         void unhandled_exception() noexcept {
@@ -75,14 +75,14 @@ private:
     };
 
     template <typename PResultValue>
-    struct sync_task_promise final : public sync_task_promise_base {
-        using coroutine_handle_t = std::coroutine_handle<sync_task_promise<ResultValue>>;
+    struct sync_task_promise_t final : public sync_task_promise_base_t {
+        using coroutine_handle_t = std::coroutine_handle<sync_task_promise_t<ResultValue>>;
 
     public:
-        sync_task_promise() = default;
+        sync_task_promise_t() = default;
 
-        sync_task get_return_object() {
-            return sync_task {coroutine_handle_t::from_promise(*this)};
+        sync_task_t get_return_object() {
+            return sync_task_t {coroutine_handle_t::from_promise(*this)};
         }
 
         template <typename... Args>
@@ -99,39 +99,39 @@ private:
     };
 
     template <>
-    struct sync_task_promise<void> : public sync_task_promise_base {
-        using coroutine_handle_t = std::coroutine_handle<sync_task_promise<void>>;
+    struct sync_task_promise_t<void> : public sync_task_promise_base_t {
+        using coroutine_handle_t = std::coroutine_handle<sync_task_promise_t<void>>;
 
     public:
-        sync_task_promise() = default;
+        sync_task_promise_t() = default;
 
-        sync_task get_return_object() {
-            return sync_task {coroutine_handle_t::from_promise(*this)};
+        sync_task_t get_return_object() {
+            return sync_task_t {coroutine_handle_t::from_promise(*this)};
         }
 
         void return_void() {}
     };
 
-    using coroutine_handle_t = std::coroutine_handle<sync_task_promise<ResultValue>>;
+    using coroutine_handle_t = std::coroutine_handle<sync_task_promise_t<ResultValue>>;
 
-    explicit sync_task()
+    explicit sync_task_t()
         : _coro_handle(nullptr) {}
 
-    explicit sync_task(coroutine_handle_t coro_handle)
+    explicit sync_task_t(coroutine_handle_t coro_handle)
         : _coro_handle(coro_handle) {}
 
 public:
-    using promise_type = sync_task_promise<ResultValue>;
+    using promise_type = sync_task_promise_t<ResultValue>;
 
-    sync_task(const sync_task&) = delete;
-    sync_task& operator=(const sync_task&) = delete;
+    sync_task_t(const sync_task_t&) = delete;
+    sync_task_t& operator=(const sync_task_t&) = delete;
 
-    sync_task(sync_task&& other)
+    sync_task_t(sync_task_t&& other)
         : _coro_handle(other._coro_handle) {
         other._coro_handle = nullptr;
     }
 
-    sync_task& operator=(sync_task&& task) {
+    sync_task_t& operator=(sync_task_t&& task) {
         if (&task != this) {
             if (_coro_handle) {
                 _coro_handle.destroy();
@@ -144,7 +144,7 @@ public:
         return *this;
     }
 
-    ~sync_task() {
+    ~sync_task_t() {
         if (_coro_handle) {
             _coro_handle.destroy();
         }
@@ -176,7 +176,7 @@ public:
             throw std::logic_error {"Cannot detach: coroutine is not completed."};
         }
 
-        sync_task self;
+        sync_task_t self;
         std::swap(*this, self);
 
         auto& promise = self.promise();
