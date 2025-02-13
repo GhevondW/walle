@@ -54,9 +54,10 @@ private:
 
 } // namespace detail
 
-// class promise;
-
 class task_t {
+public:
+    using result_type_t = void;
+
 private:
     using coroutine_handle = std::coroutine_handle<detail::task_promise_t>;
 
