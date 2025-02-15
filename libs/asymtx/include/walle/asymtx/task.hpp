@@ -1,16 +1,23 @@
 #pragma once
 
+#include <cassert>
 #include <coroutine>
-#include <cstddef>
+#include <cstdlib>
+#include <exception>
 #include <stdexcept>
+#include <utility>
+#include <variant>
+
+#include <walle/core/overloaded.hpp>
 
 namespace walle::asymtx {
 
+template <typename ResultType>
 class task_t;
 
 namespace detail {
 
-class task_promise_t {
+class task_promise_base_t {
 private:
     struct final_awaitable {
         bool await_ready() const noexcept {
@@ -22,15 +29,15 @@ private:
             return coro.promise()._continuation;
         }
 
-        void await_resume() noexcept {}
+        void await_resume() noexcept {
+            // Should never get here.
+            assert(false);
+        }
     };
 
 public:
-    using coroutine_handle = std::coroutine_handle<task_promise_t>;
+    task_promise_base_t() = default;
 
-    task_promise_t() = default;
-
-    inline auto get_return_object();
 
     std::suspend_always initial_suspend() noexcept {
         return {};
@@ -40,10 +47,6 @@ public:
         return final_awaitable {};
     }
 
-    void return_void() {}
-
-    void unhandled_exception() {}
-
     void set_continuation(std::coroutine_handle<> continuation) noexcept {
         _continuation = continuation;
     }
@@ -52,17 +55,89 @@ private:
     std::coroutine_handle<> _continuation = nullptr;
 };
 
-} // namespace detail
-
-class task_t {
+template <typename T>
+class task_promise_t final : public task_promise_base_t {
 public:
-    using result_type_t = void;
+    using coroutine_handle = std::coroutine_handle<task_promise_t<T>>;
+
+    task_promise_t()
+        : _state(std::monostate {}) {}
+
+    inline task_t<T> get_return_object() noexcept;
+
+    template <typename... Args>
+    void return_value(Args&&... args) {
+        _state.template emplace<1>(std::forward<Args>(args)...);
+    }
+
+    void unhandled_exception() {
+        _state.template emplace<2>(std::current_exception());
+    }
+
+    const T& result() const& {
+        return std::visit(core::utils::overloaded_t {
+                              [](std::monostate) -> const T& {
+                                  // should never get here.
+                                  throw std::runtime_error {"logic error std::monostate is not allowed"};
+                              },
+                              [](const T& value) -> const T& { return value; },
+                              [](std::exception_ptr exception) -> const T& { std::rethrow_exception(exception); }},
+                          _state);
+    }
+
+    // use after move is UB
+    T result() && {
+        return std::visit(
+            core::utils::overloaded_t {[](std::monostate) -> T {
+                                           // should never get here.
+                                           throw std::runtime_error {"logic error std::monostate is not allowed"};
+                                       },
+                                       [](T& value) -> T { return std::move(value); },
+                                       [](std::exception_ptr exception) -> T { std::rethrow_exception(exception); }},
+            _state);
+    }
 
 private:
-    using coroutine_handle = std::coroutine_handle<detail::task_promise_t>;
+    std::variant<std::monostate, T, std::exception_ptr> _state;
+};
 
-    struct awaitable {
-        awaitable(coroutine_handle coroutine)
+template <>
+class task_promise_t<void> final : public task_promise_base_t {
+public:
+    using coroutine_handle = std::coroutine_handle<task_promise_t<void>>;
+
+    task_promise_t() = default;
+
+    inline task_t<void> get_return_object() noexcept;
+
+    void return_void() {}
+
+    void unhandled_exception() {
+        _exception = std::current_exception();
+    }
+
+    void result() {
+        if (_exception) {
+            std::rethrow_exception(_exception);
+        }
+    }
+
+private:
+    std::exception_ptr _exception = nullptr;
+};
+
+} // namespace detail
+
+template <typename ResultType = void>
+class task_t {
+public:
+    using result_type_t = ResultType;
+
+private:
+    using coroutine_handle = std::coroutine_handle<detail::task_promise_t<result_type_t>>;
+
+    struct awaitable_base {
+        awaitable_base(coroutine_handle coroutine)
             : _coroutine(coroutine) {}
 
         bool await_ready() {
@@ -74,14 +149,12 @@ private:
             return _coroutine;
         }
 
-        void await_resume() {}
-
-    private:
+    protected:
         coroutine_handle _coroutine;
     };
 
 public:
-    using promise_type = detail::task_promise_t;
+    using promise_type = detail::task_promise_t<result_type_t>;
 
     task_t()
         : _handle(nullptr) {}
@@ -116,6 +189,32 @@ public:
     }
 
     auto operator co_await() const& noexcept {
+        struct awaitable : public awaitable_base {
+            using awaitable_base::awaitable_base;
+
+            decltype(auto) await_resume() {
+                if (this->_coroutine == nullptr) {
+                    throw std::runtime_error {"broken task"};
+                }
+                return this->_coroutine.promise().result();
+            }
+        };
+
+        return awaitable {_handle};
+    }
+
+    auto operator co_await() && noexcept {
+        struct awaitable : public awaitable_base {
+            using awaitable_base::awaitable_base;
+
+            decltype(auto) await_resume() {
+                if (this->_coroutine == nullptr) {
+                    throw std::runtime_error {"broken task"};
+                }
+                return std::move(this->_coroutine.promise()).result();
+            }
+        };
+
         return awaitable {_handle};
     }
 
@@ -138,9 +237,13 @@ private:
 
 namespace detail {
 
-// will remove inline when do template
-inline auto task_promise_t::get_return_object() {
-    return task_t {coroutine_handle::from_promise(*this)};
+template <typename T>
+inline task_t<T> task_promise_t<T>::get_return_object() noexcept {
+    return task_t<T> {coroutine_handle::from_promise(*this)};
+}
+
+inline task_t<void> task_promise_t<void>::get_return_object() noexcept {
+    return task_t<void> {coroutine_handle::from_promise(*this)};
 }
 
 } // namespace detail

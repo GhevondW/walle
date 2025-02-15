@@ -1,6 +1,5 @@
 # TODO add headers here too
 add_library(walle_asymtx
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/all.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mutex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scheduler.cpp
 )

@@ -218,25 +218,4 @@ private:
     coroutine_handle_t _coro_handle;
 };
 
-namespace detail {
-
-template <typename Task>
-sync_task_t<typename task_traits<Task>::result_type_t> make_sync_task(Task&& task) {
-    co_await std::forward<Task>(task);
-}
-
-} // namespace detail
-
-template <typename Task>
-auto sync_wait(Task&& task) {
-    walle::core::atomic_single_shot_event_t event;
-
-    auto sync_task = detail::make_sync_task(std::forward<Task>(task));
-
-    sync_task.start(&event);
-    event.wait();
-
-    return std::move(sync_task).detach();
-}
-
 } // namespace walle::asymtx
