@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <coroutine>
-#include <memory>
 
 #include <walle/asymtx/task.hpp>
 #include <walle/exec/executor.hpp>
