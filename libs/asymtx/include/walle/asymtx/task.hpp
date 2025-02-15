@@ -38,7 +38,6 @@ private:
 public:
     task_promise_base_t() = default;
 
-
     std::suspend_always initial_suspend() noexcept {
         return {};
     }
