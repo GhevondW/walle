@@ -8,7 +8,7 @@ add_library(walle_asymtx
 add_library(walle::asymtx ALIAS walle_asymtx)
 
 target_link_libraries(walle_asymtx PRIVATE walle_options walle_warnings)
-target_link_system_libraries(walle_asymtx PUBLIC walle::core walle::exec Boost::lockfree)
+target_link_system_libraries(walle_asymtx PUBLIC walle::core walle::exec)
 target_include_directories(walle_asymtx ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_include_directories(walle_asymtx ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
