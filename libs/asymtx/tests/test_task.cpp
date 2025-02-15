@@ -1,3 +1,4 @@
+#include "walle/asymtx/spawn.hpp"
 #include <atomic>
 #include <cstddef>
 #include <gtest/gtest.h>
@@ -74,4 +75,24 @@ TEST(asymtx_sync_task, just_works_calculate_value) {
     event.wait();
 
     EXPECT_EQ(std::move(sync_task).detach(), 15);
+}
+
+TEST(asymtx_sync_task, just_works_sync_spawn) {
+    counter = 0;
+    walle::asymtx::sync_spawn([]() -> walle::asymtx::task_t<> {
+        co_await foo();
+        co_await bar();
+        co_return;
+    }());
+    EXPECT_EQ(counter, 2);
+}
+
+TEST(asymtx_sync_task, just_works_sync_spawn_with_result) {
+    auto res = walle::asymtx::sync_spawn([]() -> walle::asymtx::task_t<int> {
+        int a = co_await foo_a();
+        int b = co_await bar_b();
+        co_return a + b;
+    }());
+
+    EXPECT_EQ(res, 15);
 }
