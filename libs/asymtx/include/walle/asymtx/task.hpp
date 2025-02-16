@@ -161,10 +161,8 @@ public:
     task_t(coroutine_handle handle) noexcept
         : _handle(handle) {}
 
-    task_t(task_t&& other)
-        : _handle(other._handle) {
-        other._handle = nullptr;
-    }
+    task_t(task_t&& other) noexcept
+        : _handle(std::exchange(other._handle, nullptr)) {}
 
     task_t& operator=(task_t&& other) {
         if (&other != this) {

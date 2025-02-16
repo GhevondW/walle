@@ -1,9 +1,14 @@
-#include "walle/asymtx/spawn.hpp"
+#include "walle/asymtx/scheduler.hpp"
 #include <atomic>
 #include <cstddef>
 #include <gtest/gtest.h>
+#include <thread>
+#include <walle/asymtx/mutex.hpp>
+#include <walle/asymtx/spawn.hpp>
+#include <walle/asymtx/sync_spawn.hpp>
 #include <walle/asymtx/sync_task.hpp>
 #include <walle/asymtx/task.hpp>
+#include <walle/core/single_shot_event.hpp>
 #include <walle/exec/event_loop.hpp>
 
 #include <iostream>
@@ -95,4 +100,66 @@ TEST(asymtx_sync_task, just_works_sync_spawn_with_result) {
     }());
 
     EXPECT_EQ(res, 15);
+}
+
+walle::asymtx::mutex_t global_counter_mutex;
+std::size_t global_counter = 0; // Guarded by global_counter_mutex
+
+TEST(asymtx_sync_task, just_works_spawn) {
+    using namespace walle;
+
+    global_counter = 0;
+
+    exec::thread_pool pool(4);
+    asymtx::scheduler_t sched(pool);
+
+    std::cout << "Main thread started : " << std::this_thread::get_id() << std::endl;
+
+    auto main_task_handle = asymtx::spawn(sched, [](asymtx::scheduler_t& sched) -> walle::asymtx::task_t<> {
+        std::cout << "Main task started : " << std::this_thread::get_id() << std::endl;
+        co_await foo();
+
+        auto inner_one = asymtx::spawn(sched, []() -> asymtx::task_t<> {
+            std::cout << "Inner one task started : " << std::this_thread::get_id() << std::endl;
+            co_await foo();
+            co_await foo();
+
+            {
+                co_await global_counter_mutex.lock();
+                ++global_counter;
+                global_counter_mutex.unlock();
+            }
+
+            co_return;
+        }());
+
+        auto inner_two = asymtx::spawn(sched, []() -> asymtx::task_t<> {
+            std::cout << "Inner two task started : " << std::this_thread::get_id() << std::endl;
+            co_await bar();
+            co_await bar();
+
+            {
+                co_await global_counter_mutex.lock();
+                ++global_counter;
+                global_counter_mutex.unlock();
+            }
+
+            co_return;
+        }());
+
+        {
+            co_await global_counter_mutex.lock();
+            ++global_counter;
+            global_counter_mutex.unlock();
+        }
+
+        inner_two.join();
+        inner_one.join();
+        co_return;
+    }(sched));
+
+    main_task_handle.join();
+    pool.stop();
+
+    EXPECT_EQ(global_counter, 3);
 }

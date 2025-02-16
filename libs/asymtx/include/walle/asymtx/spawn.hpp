@@ -1,28 +1,72 @@
 #pragma once
 
-#include <type_traits>
+#include <cassert>
+#include <memory>
+#include <utility>
+#include <walle/asymtx/scheduler.hpp>
 #include <walle/asymtx/sync_task.hpp>
 #include <walle/asymtx/task.hpp>
+#include <walle/core/single_shot_event.hpp>
 
 namespace walle::asymtx {
 
-template <typename ResultType>
-ResultType sync_spawn(task_t<ResultType>&& task) {
-    core::atomic_single_shot_event_t event;
-    auto sync_task = [](task_t<ResultType>&& task) -> sync_task_t<ResultType> {
-        if constexpr (std::is_same_v<ResultType, void>) {
-            co_await std::move(task);
-        } else {
-            // Temporary solution
-            auto res = co_await std::move(task);
-            co_return std::move(res);
+class task_handle;
+static task_handle spawn(scheduler_t& scheduler, task_t<> task);
+
+class task_handle {
+    friend task_handle spawn(scheduler_t& scheduler, task_t<> task);
+
+    task_handle(sync_task_t<>&& task)
+        : _event(std::make_unique<core::atomic_single_shot_event_t>())
+        , _task(std::move(task)) {
+        start();
+    }
+
+public:
+    task_handle(task_handle&& other)
+        : _event(std::move(other._event))
+        , _task(std::move(other._task)) {}
+
+    task_handle& operator=(task_handle&& other) {
+        if (this != &other) {
+            _event = std::move(other._event);
+            _task = std::move(_task);
         }
-    }(std::move(task));
+        return *this;
+    }
 
-    sync_task.start(&event);
-    event.wait();
+    ~task_handle() {
+        assert(_task.is_done());
+    }
 
-    return std::move(sync_task).detach();
+    void join() {
+        assert(_event);
+        _event->wait();
+    }
+
+private:
+    void start() {
+        assert(_event);
+        _task.start(_event.get());
+    }
+
+private:
+    std::unique_ptr<core::atomic_single_shot_event_t> _event;
+    sync_task_t<> _task;
+};
+
+namespace detail {
+
+static sync_task_t<> create_task_sync_task(scheduler_t& scheduler, task_t<> task) {
+    co_await scheduler.schedule();
+    co_await task;
+    co_return;
+}
+
+} // namespace detail
+
+static task_handle spawn(scheduler_t& scheduler, task_t<> task) {
+    return task_handle {detail::create_task_sync_task(scheduler, std::move(task))};
 }
 
 } // namespace walle::asymtx
