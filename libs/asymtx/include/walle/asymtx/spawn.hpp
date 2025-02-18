@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <memory>
 #include <utility>
 #include <walle/asymtx/scheduler.hpp>
 #include <walle/asymtx/sync_task.hpp>
@@ -30,7 +29,7 @@ public:
     task_handle& operator=(task_handle&& other) {
         if (this != &other) {
             _event = std::move(other._event);
-            _task = std::move(_task);
+            _task = std::move(other._task);
         }
         return *this;
     }
@@ -39,7 +38,8 @@ public:
         assert(_task.is_done());
     }
 
-    void join() {
+    // must be called from none coroutine context
+    void blocking_join() {
         assert(_event);
         _event->wait();
     }

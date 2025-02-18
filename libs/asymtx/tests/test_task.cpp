@@ -153,12 +153,12 @@ TEST(asymtx_sync_task, just_works_spawn) {
             global_counter_mutex.unlock();
         }
 
-        inner_two.join();
-        inner_one.join();
+        inner_two.blocking_join();
+        inner_one.blocking_join();
         co_return;
     }(sched));
 
-    main_task_handle.join();
+    main_task_handle.blocking_join();
     pool.stop();
 
     EXPECT_EQ(global_counter, 3);
