@@ -8,7 +8,6 @@
 
 #include <type_traits>
 #include <utility>
-#include <walle/asymtx/task_traits.hpp>
 #include <walle/core/atomic_single_shot_event.hpp>
 
 namespace walle::asymtx {
@@ -25,7 +24,7 @@ struct sync_task_final_awaitable_t {
         return false;
     }
 
-    void await_suspend(std::coroutine_handle<> handle) const noexcept {
+    void await_suspend([[maybe_unused]] std::coroutine_handle<> handle) const noexcept {
         _event->set();
     }
 

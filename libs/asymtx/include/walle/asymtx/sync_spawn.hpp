@@ -1,28 +1,35 @@
 #pragma once
 
-#include <type_traits>
+#include <memory>
+
+#include <walle/asymtx/scheduler.hpp>
 #include <walle/asymtx/sync_task.hpp>
-#include <walle/asymtx/task.hpp>
 
 namespace walle::asymtx {
 
-template <typename ResultType>
-ResultType sync_spawn(task_t<ResultType>&& task) {
-    core::atomic_single_shot_event_t event;
-    auto sync_task = [](task_t<ResultType>&& task) -> sync_task_t<ResultType> {
-        if constexpr (std::is_same_v<ResultType, void>) {
-            co_await std::move(task);
-        } else {
-            // Temporary solution
-            auto res = co_await std::move(task);
-            co_return std::move(res);
-        }
-    }(std::move(task));
+class sync_task_handle;
+sync_task_handle sync_spawn(scheduler_t& scheduler, task_t<> task);
 
-    sync_task.start(&event);
-    event.wait();
+class sync_task_handle {
+    friend sync_task_handle sync_spawn(scheduler_t& scheduler, task_t<> task);
 
-    return std::move(sync_task).detach();
-}
+    sync_task_handle(sync_task_t<>&& task);
+
+public:
+    sync_task_handle(sync_task_handle&& other);
+
+    sync_task_handle& operator=(sync_task_handle&& other);
+
+    ~sync_task_handle();
+
+    void blocking_join();
+
+private:
+    void start();
+
+private:
+    std::unique_ptr<core::atomic_single_shot_event_t> _event;
+    sync_task_t<> _task;
+};
 
 } // namespace walle::asymtx

@@ -2,6 +2,7 @@
 add_library(walle_asymtx
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mutex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scheduler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sync_spawn.cpp
 )
 
 add_library(walle::asymtx ALIAS walle_asymtx)

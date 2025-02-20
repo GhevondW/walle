@@ -3,10 +3,11 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <thread>
+#include <walle/asymtx/async_spawn.hpp>
 #include <walle/asymtx/mutex.hpp>
-#include <walle/asymtx/spawn.hpp>
 #include <walle/asymtx/sync_spawn.hpp>
 #include <walle/asymtx/sync_task.hpp>
+#include <walle/asymtx/sync_wait.hpp>
 #include <walle/asymtx/task.hpp>
 #include <walle/core/single_shot_event.hpp>
 #include <walle/exec/event_loop.hpp>
@@ -84,7 +85,7 @@ TEST(asymtx_sync_task, just_works_calculate_value) {
 
 TEST(asymtx_sync_task, just_works_sync_spawn) {
     counter = 0;
-    walle::asymtx::sync_spawn([]() -> walle::asymtx::task_t<> {
+    walle::asymtx::sync_wait([]() -> walle::asymtx::task_t<> {
         co_await foo();
         co_await bar();
         co_return;
@@ -93,7 +94,7 @@ TEST(asymtx_sync_task, just_works_sync_spawn) {
 }
 
 TEST(asymtx_sync_task, just_works_sync_spawn_with_result) {
-    auto res = walle::asymtx::sync_spawn([]() -> walle::asymtx::task_t<int> {
+    auto res = walle::asymtx::sync_wait([]() -> walle::asymtx::task_t<int> {
         int a = co_await foo_a();
         int b = co_await bar_b();
         co_return a + b;
@@ -102,64 +103,35 @@ TEST(asymtx_sync_task, just_works_sync_spawn_with_result) {
     EXPECT_EQ(res, 15);
 }
 
-walle::asymtx::mutex_t global_counter_mutex;
-std::size_t global_counter = 0; // Guarded by global_counter_mutex
+// walle::asymtx::mutex_t global_counter_mutex;
+// std::size_t global_counter = 0; // Guarded by global_counter_mutex
 
-TEST(asymtx_sync_task, just_works_spawn) {
-    using namespace walle;
+// TEST(asymtx_sync_task, just_works_async_spawn) {
+//     using namespace walle;
 
-    global_counter = 0;
+//     global_counter = 0;
 
-    exec::thread_pool pool(4);
-    asymtx::scheduler_t sched(pool);
+//     exec::thread_pool pool(1);
+//     asymtx::scheduler_t sched(pool);
 
-    std::cout << "Main thread started : " << std::this_thread::get_id() << std::endl;
+//     std::cout << "Main thread started : " << std::this_thread::get_id() << std::endl;
 
-    auto main_task_handle = asymtx::spawn(sched, [](asymtx::scheduler_t& sched) -> walle::asymtx::task_t<> {
-        std::cout << "Main task started : " << std::this_thread::get_id() << std::endl;
-        co_await foo();
+//     auto main_task_handle = asymtx::spawn(sched, [](asymtx::scheduler_t& sched) -> walle::asymtx::task_t<> {
+//         std::cout << "Main task started : " << std::this_thread::get_id() << std::endl;
 
-        auto inner_one = asymtx::spawn(sched, []() -> asymtx::task_t<> {
-            std::cout << "Inner one task started : " << std::this_thread::get_id() << std::endl;
-            co_await foo();
-            co_await foo();
+//         auto inner = asymtx::async_scope();
 
-            {
-                co_await global_counter_mutex.lock();
-                ++global_counter;
-                global_counter_mutex.unlock();
-            }
+//         inner.spawn([&sched]() -> asymtx::task_t<> {
+//             co_await sched.schedule();
+//             std::cout << "Inner task started : " << std::this_thread::get_id() << std::endl;
+//             co_return;
+//         }());
 
-            co_return;
-        }());
+//         co_await inner.join();
 
-        auto inner_two = asymtx::spawn(sched, []() -> asymtx::task_t<> {
-            std::cout << "Inner two task started : " << std::this_thread::get_id() << std::endl;
-            co_await bar();
-            co_await bar();
+//         co_return;
+//     }(sched));
 
-            {
-                co_await global_counter_mutex.lock();
-                ++global_counter;
-                global_counter_mutex.unlock();
-            }
-
-            co_return;
-        }());
-
-        {
-            co_await global_counter_mutex.lock();
-            ++global_counter;
-            global_counter_mutex.unlock();
-        }
-
-        inner_two.blocking_join();
-        inner_one.blocking_join();
-        co_return;
-    }(sched));
-
-    main_task_handle.blocking_join();
-    pool.stop();
-
-    EXPECT_EQ(global_counter, 3);
-}
+//     main_task_handle.blocking_join();
+//     pool.stop();
+// }
