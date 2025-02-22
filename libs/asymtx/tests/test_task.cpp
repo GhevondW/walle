@@ -1,13 +1,9 @@
-#include "walle/asymtx/scheduler.hpp"
 #include <atomic>
 #include <cstddef>
 #include <gtest/gtest.h>
-#include <thread>
-#include <walle/asymtx/async_spawn.hpp>
 #include <walle/asymtx/mutex.hpp>
 #include <walle/asymtx/sync_spawn.hpp>
 #include <walle/asymtx/sync_task.hpp>
-#include <walle/asymtx/sync_wait.hpp>
 #include <walle/asymtx/task.hpp>
 #include <walle/core/single_shot_event.hpp>
 #include <walle/exec/event_loop.hpp>
@@ -85,53 +81,21 @@ TEST(asymtx_sync_task, just_works_calculate_value) {
 
 TEST(asymtx_sync_task, just_works_sync_spawn) {
     counter = 0;
-    walle::asymtx::sync_wait([]() -> walle::asymtx::task_t<> {
+    auto handle = walle::asymtx::sync_spawn([]() -> walle::asymtx::task_t<> {
         co_await foo();
         co_await bar();
         co_return;
     }());
+    handle.blocking_join();
     EXPECT_EQ(counter, 2);
 }
 
 TEST(asymtx_sync_task, just_works_sync_spawn_with_result) {
-    auto res = walle::asymtx::sync_wait([]() -> walle::asymtx::task_t<int> {
+    auto handle = walle::asymtx::sync_spawn([]() -> walle::asymtx::task_t<int> {
         int a = co_await foo_a();
         int b = co_await bar_b();
         co_return a + b;
     }());
 
-    EXPECT_EQ(res, 15);
+    EXPECT_EQ(std::move(handle).get(), 15);
 }
-
-// walle::asymtx::mutex_t global_counter_mutex;
-// std::size_t global_counter = 0; // Guarded by global_counter_mutex
-
-// TEST(asymtx_sync_task, just_works_async_spawn) {
-//     using namespace walle;
-
-//     global_counter = 0;
-
-//     exec::thread_pool pool(1);
-//     asymtx::scheduler_t sched(pool);
-
-//     std::cout << "Main thread started : " << std::this_thread::get_id() << std::endl;
-
-//     auto main_task_handle = asymtx::spawn(sched, [](asymtx::scheduler_t& sched) -> walle::asymtx::task_t<> {
-//         std::cout << "Main task started : " << std::this_thread::get_id() << std::endl;
-
-//         auto inner = asymtx::async_scope();
-
-//         inner.spawn([&sched]() -> asymtx::task_t<> {
-//             co_await sched.schedule();
-//             std::cout << "Inner task started : " << std::this_thread::get_id() << std::endl;
-//             co_return;
-//         }());
-
-//         co_await inner.join();
-
-//         co_return;
-//     }(sched));
-
-//     main_task_handle.blocking_join();
-//     pool.stop();
-// }
