@@ -10,7 +10,7 @@
 walle::asymtx::mutex_t global_counter_mutex;
 std::size_t global_counter = 0; // Guarded by global_counter_mutex
 
-TEST(asymtx_sync_task, just_works_async_spawn) {
+TEST(asymtx_sync_task, just_works_async_scope) {
     using namespace walle;
 
     global_counter = 0;

@@ -29,14 +29,8 @@ walle::asymtx::task_t<std::vector<std::size_t>> generate_image() {
 
     std::vector<std::size_t> image(width * height, 1);
 
-    // for (std::size_t y = 0; y < height; ++y) {
-    //     for (std::size_t x = 0; x < width; ++x) {
-    //         image[y * width + x] = 1;
-    //     }
-    // }
-
     co_return image;
-} 
+}
 
 walle::asymtx::task_t<std::vector<std::size_t>> get_image_add_value() {
     std::size_t width = 1024;
@@ -44,25 +38,18 @@ walle::asymtx::task_t<std::vector<std::size_t>> get_image_add_value() {
 
     std::vector<std::size_t> image(width * height, 2);
 
-    // for (std::size_t y = 0; y < height; ++y) {
-    //     for (std::size_t x = 0; x < width; ++x) {
-    //         image[y * width + x] = 2;
-    //     }
-    // }
-
     co_return image;
-} 
+}
 
 walle::asymtx::task_t<std::vector<std::size_t>> add_images(std::vector<std::size_t> a, std::vector<std::size_t> b) {
     assert(a.size() == b.size());
 
-    for(int i = 0; i < a.size(); ++i) {
+    for (int i = 0; i < a.size(); ++i) {
         a[i] += b[i];
     }
 
     co_return a;
-} 
-
+}
 
 } // namespace
 
@@ -133,7 +120,6 @@ TEST(asymtx_sync_task, just_works_result_value_spawn) {
 
     global_counter = 0;
 
-
     std::cout << "Main thread started : " << std::this_thread::get_id() << std::endl;
 
     auto main_task = asymtx::sync_spawn([]() -> asymtx::task_t<std::vector<std::size_t>> {
@@ -144,12 +130,11 @@ TEST(asymtx_sync_task, just_works_result_value_spawn) {
         co_return result;
     }());
 
-
     main_task.blocking_join();
-    
+
     auto result = std::move(main_task).get();
 
-    for(int val : result) {
+    for (int val : result) {
         EXPECT_EQ(val, 3);
     }
 }
@@ -172,15 +157,13 @@ TEST(asymtx_sync_task, just_works_result_value_on_scheduler_spawn) {
         co_return result;
     }());
 
-
     main_task.blocking_join();
-    
+
     pool.stop();
 
     auto result = std::move(main_task).get();
 
-    for(int val : result) {
+    for (int val : result) {
         EXPECT_EQ(val, 3);
     }
 }
-
