@@ -1,4 +1,7 @@
+#include "walle/asymtx/task.hpp"
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <vector>
 #include <walle/asymtx/mutex.hpp>
 #include <walle/asymtx/sync_spawn.hpp>
 #include <walle/core/atomic_single_shot_event.hpp>
@@ -18,6 +21,34 @@ walle::asymtx::task_t<> bar() {
     std::cout << "Hello bar" << std::endl;
     ++counter;
     co_return;
+}
+
+walle::asymtx::task_t<std::vector<std::size_t>> generate_image() {
+    std::size_t width = 1024;
+    std::size_t height = 1024;
+
+    std::vector<std::size_t> image(width * height, 1);
+
+    co_return image;
+}
+
+walle::asymtx::task_t<std::vector<std::size_t>> get_image_add_value() {
+    std::size_t width = 1024;
+    std::size_t height = 1024;
+
+    std::vector<std::size_t> image(width * height, 2);
+
+    co_return image;
+}
+
+walle::asymtx::task_t<std::vector<std::size_t>> add_images(std::vector<std::size_t> a, std::vector<std::size_t> b) {
+    assert(a.size() == b.size());
+
+    for (int i = 0; i < a.size(); ++i) {
+        a[i] += b[i];
+    }
+
+    co_return a;
 }
 
 } // namespace
@@ -82,4 +113,57 @@ TEST(asymtx_sync_task, just_works_spawn) {
     pool.stop();
 
     EXPECT_EQ(global_counter, 3);
+}
+
+TEST(asymtx_sync_task, just_works_result_value_spawn) {
+    using namespace walle;
+
+    global_counter = 0;
+
+    std::cout << "Main thread started : " << std::this_thread::get_id() << std::endl;
+
+    auto main_task = asymtx::sync_spawn([]() -> asymtx::task_t<std::vector<std::size_t>> {
+        std::cout << "INner thread started : " << std::this_thread::get_id() << std::endl;
+        auto a = co_await generate_image();
+        auto b = co_await get_image_add_value();
+        auto result = co_await add_images(std::move(a), std::move(b));
+        co_return result;
+    }());
+
+    main_task.blocking_join();
+
+    auto result = std::move(main_task).get();
+
+    for (int val : result) {
+        EXPECT_EQ(val, 3);
+    }
+}
+
+TEST(asymtx_sync_task, just_works_result_value_on_scheduler_spawn) {
+    using namespace walle;
+
+    global_counter = 0;
+
+    exec::thread_pool pool(4);
+    asymtx::scheduler_t sched(pool);
+
+    std::cout << "Main thread started : " << std::this_thread::get_id() << std::endl;
+
+    auto main_task = asymtx::sync_spawn(sched, []() -> asymtx::task_t<std::vector<std::size_t>> {
+        std::cout << "Inner thread started : " << std::this_thread::get_id() << std::endl;
+        auto a = co_await generate_image();
+        auto b = co_await get_image_add_value();
+        auto result = co_await add_images(std::move(a), std::move(b));
+        co_return result;
+    }());
+
+    main_task.blocking_join();
+
+    pool.stop();
+
+    auto result = std::move(main_task).get();
+
+    for (int val : result) {
+        EXPECT_EQ(val, 3);
+    }
 }
