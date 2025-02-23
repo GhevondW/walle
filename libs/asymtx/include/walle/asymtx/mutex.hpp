@@ -3,7 +3,6 @@
 #include <atomic>
 #include <cassert>
 #include <coroutine>
-#include <stdexcept>
 
 namespace walle::asymtx {
 
@@ -47,9 +46,7 @@ public:
         return {this};
     }
 
-    bool try_lock() {
-        throw std::runtime_error {"Not implemented yet"};
-    }
+    bool try_lock();
 
     void unlock();
 

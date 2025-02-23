@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <walle/asymtx/mutex.hpp>
 
 namespace walle::asymtx {
@@ -35,6 +36,10 @@ bool mutex_awaitable_t::await_suspend(std::coroutine_handle<> handle) noexcept {
 void mutex_awaitable_t::await_resume() const noexcept {}
 
 } // namespace detail
+
+bool mutex_t::try_lock() {
+    throw std::runtime_error {"Not implemented yet"};
+}
 
 void mutex_t::unlock() {
     assert(_head.load() != not_locked);

@@ -24,6 +24,7 @@ function(walle_async_add_gtest test_name test_source)
 endfunction()
 
 walle_async_add_gtest(test_test_async_scope test_async_scope.cpp)
+walle_async_add_gtest(test_go test_go.cpp)
 walle_async_add_gtest(test_asymtx_sync_spawn test_sync_spawn.cpp)
 walle_async_add_gtest(test_asymtx_sync_task test_sync_task.cpp)
 walle_async_add_gtest(test_asymtx_task test_task.cpp)
