@@ -40,7 +40,7 @@ public:
     /**
      * @brief Submits a task for execution.
      * @param task The task to be executed.
-     * 
+     *
      * The task is stored in a queue and can be executed later using `run_one()` or `run_all()`.
      */
     void submit(task_t task) override;

@@ -1,17 +1,22 @@
 #include "walle/async/task_handle.hpp"
 #include "task_context.hpp"
+#include "walle/async/error/error.hpp"
 
 #include <cassert>
+#include <cstddef>
 #include <exception>
 
 namespace walle::async {
 
 task_handle::task_handle()
-    : _impl() {}
+    : _impl(nullptr)
+    , _event(nullptr) {}
 
 task_handle::task_handle(task_handle&& other) noexcept
-    : _impl() {
-    _impl.swap(other._impl);
+    : _impl(nullptr)
+    , _event(nullptr) {
+    std::swap(_impl, other._impl);
+    std::swap(_event, other._event);
 }
 
 task_handle& task_handle::operator=(task_handle&& other) noexcept {
@@ -23,7 +28,8 @@ task_handle& task_handle::operator=(task_handle&& other) noexcept {
         return *this;
     }
 
-    _impl.swap(other._impl);
+    std::swap(_impl, other._impl);
+    std::swap(_event, other._event);
     return *this;
 }
 
@@ -49,23 +55,22 @@ task_id task_handle::get_id() const noexcept {
 // coroutine context
 void task_handle::join() {
     assert(_impl);
-
-    // Check id and joinable
-    _impl->join();
-    _impl.reset();
+    throw error::not_implemeted_error_t {"not implemented yet."};
 }
 
 // none coroutine context
 void task_handle::blocking_join() {
     assert(_impl);
-
-    // Check id and joinable
-    _impl->blocking_join();
-    _impl.reset();
+    _event->wait();
+    _impl = nullptr;
 }
 
-void task_handle::cancel() {}
+void task_handle::cancel() {
+    throw error::not_implemeted_error_t {"not implemented yet."};
+}
 
-void task_handle::blocking_cancel() {}
+void task_handle::blocking_cancel() {
+    throw error::not_implemeted_error_t {"not implemented yet."};
+}
 
 } // namespace walle::async

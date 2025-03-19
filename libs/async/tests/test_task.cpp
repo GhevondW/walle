@@ -13,7 +13,7 @@
 TEST(async_test_fiber, api_just_works) {
     walle::exec::thread_pool pool(4);
 
-    auto main_task = walle::async::go(pool, []() {
+    auto main_task = walle::async::go(&pool, []() {
         std::cout << "Main task start ..." << std::endl;
 
         std::vector<walle::async::task_handle> tasks;

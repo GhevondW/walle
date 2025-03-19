@@ -1,11 +1,15 @@
 #pragma once
 
+#include <memory>
+
+#include <walle/core/atomic_single_shot_event.hpp>
 #include <walle/core/non_copyable.hpp>
 
 #include <walle/async/task_function.hpp>
 #include <walle/async/task_id.hpp>
 
 #include <boost/intrusive_ptr.hpp>
+#include <walle/core/single_shot_event.hpp>
 
 namespace walle::async {
 
@@ -38,7 +42,8 @@ public:
     void blocking_cancel();
 
 private:
-    boost::intrusive_ptr<task_context> _impl;
+    task_context* _impl = nullptr;
+    std::unique_ptr<core::atomic_single_shot_event_t> _event = nullptr;
 };
 
 } // namespace walle::async
