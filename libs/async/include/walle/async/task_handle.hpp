@@ -5,23 +5,22 @@
 #include <walle/core/atomic_single_shot_event.hpp>
 #include <walle/core/non_copyable.hpp>
 
-#include <walle/async/task_function.hpp>
 #include <walle/async/task_id.hpp>
 
-#include <boost/intrusive_ptr.hpp>
+// #include <boost/intrusive_ptr.hpp>
 #include <walle/core/single_shot_event.hpp>
 
 namespace walle::async {
 
-class task_context;
+class task_context_t;
 
 // TODO : allocator support
-class task_handle final : public core::non_copyable {
+class task_handle_t final : public core::non_copyable {
 public:
-    task_handle();
-    task_handle(task_handle&&) noexcept;
-    task_handle& operator=(task_handle&&) noexcept;
-    ~task_handle();
+    task_handle_t(std::shared_ptr<core::atomic_single_shot_event_t> event, task_context_t* task_context);
+    task_handle_t(task_handle_t&&) noexcept;
+    task_handle_t& operator=(task_handle_t&&) noexcept;
+    ~task_handle_t();
 
     bool is_valid() const noexcept;
 
@@ -42,8 +41,8 @@ public:
     void blocking_cancel();
 
 private:
-    task_context* _impl = nullptr;
-    std::unique_ptr<core::atomic_single_shot_event_t> _event = nullptr;
+    std::shared_ptr<core::atomic_single_shot_event_t> _event = nullptr;
+    task_context_t* _impl = nullptr;
 };
 
 } // namespace walle::async
