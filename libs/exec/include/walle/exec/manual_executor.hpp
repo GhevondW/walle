@@ -14,6 +14,7 @@ namespace walle::exec {
  *
  * This executor allows manual execution of tasks that have been submitted.
  * Tasks are stored in a queue and can be executed one by one or all at once.
+ * TODO : make this thread safe
  */
 class manual_executor
     : core::non_copyable

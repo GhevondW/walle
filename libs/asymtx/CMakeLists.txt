@@ -1,5 +1,6 @@
 # TODO add headers here too
 add_library(walle_asymtx
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/compute_event_awaitable.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mutex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scheduler.cpp
 )
@@ -7,7 +8,7 @@ add_library(walle_asymtx
 add_library(walle::asymtx ALIAS walle_asymtx)
 
 target_link_libraries(walle_asymtx PRIVATE walle_options walle_warnings)
-target_link_system_libraries(walle_asymtx PUBLIC walle::core walle::exec)
+target_link_system_libraries(walle_asymtx PUBLIC walle::core walle::exec Boost::compute "-framework OpenCL")
 target_include_directories(walle_asymtx ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_include_directories(walle_asymtx ${WARNING_GUARD} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
