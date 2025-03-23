@@ -10,15 +10,18 @@
 
 #include <vector>
 
+#define TID std::this_thread::get_id()
+
 TEST(async_test_fiber, api_just_works) {
     walle::exec::thread_pool pool(4);
 
-    auto main_task = walle::async::go(pool, []() {
-        std::cout << "Main task start ..." << std::endl;
+    std::cout << "Main thread : " << TID << std::endl;
+    auto main_task = walle::async::go(&pool, []() {
+        std::cout << "Main task start id : " << TID << std::endl;
 
-        std::vector<walle::async::task_handle> tasks;
+        std::vector<walle::async::task_handle_t> tasks;
         for (int i = 0; i < 10; ++i) {
-            tasks.push_back(walle::async::go([i]() { std::cout << "Child task " << i << "..." << std::endl; }));
+            tasks.push_back(walle::async::go([i]() { std::cout << "Child " << i << " : " << TID << std::endl; }));
         }
 
         for (auto& task : tasks) {
@@ -32,24 +35,3 @@ TEST(async_test_fiber, api_just_works) {
 
     pool.stop();
 }
-
-// TEST(async_test_fiber, just_works) {
-//     walle::exec::thread_pool pool(4);
-//     walle::core::wait_group wg;
-
-//     for (int i = 0; i < 1024; ++i) {
-//         wg.add();
-//         walle::async::go(pool, [&wg]() {
-//             walle::core::defer_t defer([&wg]() { wg.done(); });
-
-//             for (int i = 0; i < 16; ++i) {
-//                 walle::async::this_task::yield();
-//             }
-//         });
-//     }
-
-//     wg.wait();
-//     pool.stop();
-
-//     walle::async::task_handle handle;
-// }

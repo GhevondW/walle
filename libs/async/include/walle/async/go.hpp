@@ -6,7 +6,7 @@
 
 namespace walle::async {
 
-task_handle go(exec::executor_i& executor, task_function_t func);
-task_handle go(task_function_t func);
+task_handle_t go(exec::executor_i* executor, task_function_t func);
+task_handle_t go(task_function_t func);
 
 } // namespace walle::async
